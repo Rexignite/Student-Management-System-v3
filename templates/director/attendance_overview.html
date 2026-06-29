@@ -1,0 +1,376 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #11998e, #38ef7d);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+                        <div>
+                            <h2 class="mb-0 fw-bold">
+                                <i class="fas fa-calendar-check me-3"></i>📊 Attendance Overview
+                            </h2>
+                            <p class="mb-0 mt-2 opacity-75">Complete attendance analytics and reports</p>
+                        </div>
+                        <div class="mt-2 mt-sm-0">
+                            <a href="{% url 'download_attendance_report' %}" class="btn btn-light btn-lg">
+                                <i class="fas fa-download me-2 text-success"></i>Download Report
+                            </a>
+                            <a href="{% url 'download_full_attendance_csv' %}" class="btn btn-outline-light btn-lg ms-2">
+                                <i class="fas fa-file-csv me-2"></i>Full CSV
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                <i class="fas fa-info-circle me-2"></i> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-lg text-white" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-check-circle fa-3x mb-3 opacity-75"></i>
+                    <h2 class="mb-0 fw-bold">{{ total_present }}</h2>
+                    <p class="mb-0 mt-2 opacity-75">Present Days</p>
+                    <small class="opacity-50">Total attendance</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-lg text-white" style="background: linear-gradient(135deg, #dc3545, #c82333);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-times-circle fa-3x mb-3 opacity-75"></i>
+                    <h2 class="mb-0 fw-bold">{{ total_absent }}</h2>
+                    <p class="mb-0 mt-2 opacity-75">Absent Days</p>
+                    <small class="opacity-50">Missing records</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-lg text-dark" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-clock fa-3x mb-3 opacity-75"></i>
+                    <h2 class="mb-0 fw-bold">{{ total_late }}</h2>
+                    <p class="mb-0 mt-2 opacity-75">Late Arrivals</p>
+                    <small class="opacity-50">Delayed entries</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-lg text-white" style="background: linear-gradient(135deg, #17a2b8, #138496);">
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-umbrella-beach fa-3x mb-3 opacity-75"></i>
+                    <h2 class="mb-0 fw-bold">{{ total_leave }}</h2>
+                    <p class="mb-0 mt-2 opacity-75">Leave Days</p>
+                    <small class="opacity-50">Approved leaves</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Overall Statistics -->
+    <div class="card border-0 shadow-lg mb-4">
+        <div class="card-header bg-white border-0 py-3">
+            <h5 class="mb-0 fw-bold text-primary">
+                <i class="fas fa-chart-line me-2"></i>Overall Statistics
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-semibold">Total Attendance Rate</span>
+                        <span class="fw-bold text-primary">
+                            {% with total=total_present|add:total_absent|add:total_late|add:total_leave %}
+                                {% if total > 0 %}
+                                    {% widthratio total_present total 100 %}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            {% endwith %}
+                        </span>
+                    </div>
+                    <div class="progress" style="height: 12px;">
+                        {% with total=total_present|add:total_absent|add:total_late|add:total_leave %}
+                        <div class="progress-bar bg-success" 
+                             role="progressbar" 
+                             style="width: {% if total > 0 %}{% widthratio total_present total 100 %}{% else %}0{% endif %}%"
+                             aria-valuenow="{% if total > 0 %}{% widthratio total_present total 100 %}{% else %}0{% endif %}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                        </div>
+                        {% endwith %}
+                    </div>
+                </div>
+                <div class="col-md-4 text-center mt-3 mt-md-0">
+                    <div class="d-flex justify-content-around">
+                        <div>
+                            <div class="badge bg-success p-2">✓ Present</div>
+                            <div class="mt-1 small">{{ total_present }}</div>
+                        </div>
+                        <div>
+                            <div class="badge bg-danger p-2">✗ Absent</div>
+                            <div class="mt-1 small">{{ total_absent }}</div>
+                        </div>
+                        <div>
+                            <div class="badge bg-warning text-dark p-2">🕐 Late</div>
+                            <div class="mt-1 small">{{ total_late }}</div>
+                        </div>
+                        <div>
+                            <div class="badge bg-info p-2">🏖️ Leave</div>
+                            <div class="mt-1 small">{{ total_leave }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Section -->
+    <div class="card border-0 shadow-lg mb-4">
+        <div class="card-header bg-white border-0 py-3">
+            <h5 class="mb-0 fw-bold text-primary">
+                <i class="fas fa-filter me-2"></i>Filter Attendance Records
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-user-graduate me-1 text-primary"></i>Student
+                    </label>
+                    <select name="student_id" class="form-select">
+                        <option value="">All Students</option>
+                        {% for student in students %}
+                            <option value="{{ student.id }}" {% if selected_student == student.id|stringformat:"s" %}selected{% endif %}>
+                                {{ student.full_name }} ({{ student.student_id }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-book me-1 text-primary"></i>Subject
+                    </label>
+                    <select name="subject_id" class="form-select">
+                        <option value="">All Subjects</option>
+                        {% for subject in subjects %}
+                            <option value="{{ subject.id }}" {% if selected_subject == subject.id|stringformat:"s" %}selected{% endif %}>
+                                {{ subject.subject_name }} ({{ subject.subject_code }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-calendar-alt me-1 text-primary"></i>From Date
+                    </label>
+                    <input type="date" name="start_date" class="form-control" value="{{ start_date|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-calendar-alt me-1 text-primary"></i>To Date
+                    </label>
+                    <input type="date" name="end_date" class="form-control" value="{{ end_date|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold text-white">Action</label>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>Apply Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Attendance Records Table -->
+    <div class="card border-0 shadow-lg">
+        <div class="card-header bg-white border-0 py-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h5 class="mb-0 fw-bold text-primary">
+                    <i class="fas fa-table me-2"></i>Attendance Records
+                </h5>
+                <div class="mt-2 mt-sm-0">
+                    <button onclick="window.print()" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-print me-1"></i> Print
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover mb-0" id="attendanceOverviewTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th width="5%">#</th>
+                            <th width="15%">Student Name</th>
+                            <th width="10%">Student ID</th>
+                            <th width="10%">Class</th>
+                            <th width="15%">Subject</th>
+                            <th width="10%">Date</th>
+                            <th width="12%">Status</th>
+                            <th width="23%">Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for att in attendances %}
+                        <tr>
+                            <td class="text-center">{{ forloop.counter }}<\/td>
+                            <td>
+                                <strong>{{ att.student.full_name }}</strong>
+                                <br>
+                                <small class="text-muted">Roll: {{ att.student.roll_number }}</small>
+                            <\/td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary">{{ att.student.student_id }}</span>
+                            <\/td>
+                            <td class="text-center">{{ att.student.class_name }}<\/td>
+                            <td>
+                                <span class="badge bg-info">{{ att.subject.subject_code }}</span>
+                                {{ att.subject.subject_name }}
+                            <\/td>
+                            <td class="text-center">{{ att.date|date:"d M Y" }}<\/td>
+                            <td class="text-center">
+                                {% if att.status == 'present' %}
+                                    <span class="badge bg-success px-3 py-2">
+                                        <i class="fas fa-check-circle me-1"></i> Present
+                                    </span>
+                                {% elif att.status == 'absent' %}
+                                    <span class="badge bg-danger px-3 py-2">
+                                        <i class="fas fa-times-circle me-1"></i> Absent
+                                    </span>
+                                {% elif att.status == 'late' %}
+                                    <span class="badge bg-warning text-dark px-3 py-2">
+                                        <i class="fas fa-clock me-1"></i> Late
+                                    </span>
+                                {% elif att.status == 'leave' %}
+                                    <span class="badge bg-info px-3 py-2">
+                                        <i class="fas fa-umbrella-beach me-1"></i> Leave
+                                    </span>
+                                {% endif %}
+                            <\/td>
+                            <td>
+                                {{ att.remarks|default:"-" }}
+                                {% if att.marked_by %}
+                                    <br>
+                                    <small class="text-muted">by: {{ att.marked_by.full_name }}</small>
+                                {% endif %}
+                            <\/td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <i class="fas fa-calendar-times fa-3x text-muted mb-3 d-block"></i>
+                                <h5 class="text-muted">No attendance records found</h5>
+                                <p class="text-muted">Try adjusting your filters or add attendance records</p>
+                            <\/td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        {% if attendances %}
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i> Showing {{ attendances|length }} records
+                </small>
+                <div>
+                    <a href="{% url 'download_attendance_report' %}" class="btn btn-sm btn-success">
+                        <i class="fas fa-download me-1"></i> Export CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* Table Styles */
+    #attendanceOverviewTable {
+        font-size: 14px;
+    }
+    #attendanceOverviewTable tbody tr:hover {
+        background-color: #f8f9fa;
+        cursor: pointer;
+    }
+    .badge {
+        font-weight: 500;
+    }
+    
+    /* Print Styles */
+    @media print {
+        .btn, .sidebar, .navbar, .card-header .btn, .card-footer {
+            display: none !important;
+        }
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+        body {
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .container-fluid {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+    }
+    
+    /* Animation */
+    .card {
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    }
+</style>
+
+<!-- DataTables CSS and JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.1/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#attendanceOverviewTable').DataTable({
+            order: [[5, 'desc']],  // Sort by date descending
+            language: {
+                search: "<i class='fas fa-search'></i> Search:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ records",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Prev"
+                }
+            },
+            pageLength: 25,
+            responsive: true
+        });
+    });
+</script>
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}

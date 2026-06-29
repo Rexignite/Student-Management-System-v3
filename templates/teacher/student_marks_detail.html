@@ -1,0 +1,422 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0 fw-bold">
+                                <i class="fas fa-chart-line me-3"></i>Student Marks Details
+                            </h2>
+                            <p class="mb-0 mt-2 opacity-75">Complete marks summary with subject-wise performance analysis</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-user-graduate fa-3x opacity-25"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}times-circle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Student Information Card -->
+    <div class="card border-0 shadow-lg mb-4">
+        <div class="card-header" style="background: linear-gradient(135deg, #1e3c72, #2a5298); color: white;">
+            <h4 class="mb-0">
+                <i class="fas fa-user-graduate me-2"></i>Student Information
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="border-start border-primary border-4 ps-3">
+                        <small class="text-muted d-block"><i class="fas fa-id-card me-1"></i> Student ID</small>
+                        <strong class="fs-5">{{ student.student_id }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="border-start border-success border-4 ps-3">
+                        <small class="text-muted d-block"><i class="fas fa-user me-1"></i> Full Name</small>
+                        <strong class="fs-5">{{ student.full_name }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="border-start border-info border-4 ps-3">
+                        <small class="text-muted d-block"><i class="fas fa-book me-1"></i> Class/Course</small>
+                        <strong class="fs-5">{{ student.class_name }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="border-start border-warning border-4 ps-3">
+                        <small class="text-muted d-block"><i class="fas fa-hashtag me-1"></i> Roll Number</small>
+                        <strong class="fs-5">{{ student.roll_number }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Subject-wise Marks -->
+    {% if marks_by_subject %}
+        {% for subject, marks in marks_by_subject.items %}
+        <div class="card border-0 shadow-lg mb-4">
+            <div class="card-header" style="background: linear-gradient(135deg, #17a2b8, #138496); color: white;">
+                <h5 class="mb-0">
+                    <i class="fas fa-book-open me-2"></i>{{ subject.subject_name }}
+                    <small class="text-white-50">({{ subject.subject_code }})</small>
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr class="text-center">
+                                <th width="20%">Exam Type</th>
+                                <th width="15%">Marks Obtained</th>
+                                <th width="15%">Total Marks</th>
+                                <th width="25%">Percentage</th>
+                                <th width="25%">Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mark in marks %}
+                            <tr>
+                                <td class="text-center">
+                                    {% if mark.exam_type == 'mid_term' %}
+                                        <i class="fas fa-pen-alt me-1 text-primary"></i> Mid Term
+                                    {% elif mark.exam_type == 'final_term' %}
+                                        <i class="fas fa-graduation-cap me-1 text-success"></i> Final Term
+                                    {% elif mark.exam_type == 'assignment' %}
+                                        <i class="fas fa-file-alt me-1 text-info"></i> Assignment
+                                    {% elif mark.exam_type == 'quiz' %}
+                                        <i class="fas fa-question-circle me-1 text-warning"></i> Quiz
+                                    {% elif mark.exam_type == 'practical' %}
+                                        <i class="fas fa-flask me-1 text-danger"></i> Practical
+                                    {% else %}
+                                        {{ mark.get_exam_type_display }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <strong class="text-primary">{{ mark.marks_obtained }}</strong> / {{ mark.total_marks }}
+                                </td>
+                                <td class="text-center">{{ mark.total_marks }}</td>
+                                <td>
+                                    <div class="progress" style="height: 30px;">
+                                        <div class="progress-bar 
+                                            {% if mark.percentage >= 75 %}bg-success
+                                            {% elif mark.percentage >= 50 %}bg-warning
+                                            {% else %}bg-danger{% endif %}" 
+                                            style="width: {{ mark.percentage }}%">
+                                            {{ mark.percentage|floatformat:1 }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge 
+                                        {% if mark.percentage >= 90 %}bg-success
+                                        {% elif mark.percentage >= 80 %}bg-info
+                                        {% elif mark.percentage >= 70 %}bg-primary
+                                        {% elif mark.percentage >= 60 %}bg-warning
+                                        {% elif mark.percentage >= 50 %}bg-orange
+                                        {% else %}bg-danger{% endif %} fs-6 p-2">
+                                        {% if mark.percentage >= 90 %}
+                                            A+ 🌟
+                                        {% elif mark.percentage >= 80 %}
+                                            A
+                                        {% elif mark.percentage >= 70 %}
+                                            B+
+                                        {% elif mark.percentage >= 60 %}
+                                            B
+                                        {% elif mark.percentage >= 50 %}
+                                            C
+                                        {% elif mark.percentage >= 40 %}
+                                            D
+                                        {% else %}
+                                            F ❌
+                                        {% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Subject Summary -->
+                {% with subject_data=subject_percentages|get_item:subject %}
+                {% if subject_data %}
+                <div class="alert alert-info m-3">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <i class="fas fa-chart-line me-1"></i>
+                            <strong>Average:</strong> {{ subject_data.percentage|floatformat:1 }}%
+                        </div>
+                        <div class="col-md-4">
+                            <i class="fas fa-star me-1"></i>
+                            <strong>Grade:</strong> 
+                            <span class="badge 
+                                {% if subject_data.percentage >= 90 %}bg-success
+                                {% elif subject_data.percentage >= 80 %}bg-info
+                                {% elif subject_data.percentage >= 70 %}bg-primary
+                                {% elif subject_data.percentage >= 60 %}bg-warning
+                                {% elif subject_data.percentage >= 50 %}bg-orange
+                                {% else %}bg-danger{% endif %}">
+                                {{ subject_data.grade }}
+                            </span>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="fas fa-tasks me-1"></i>
+                            <strong>Total Exams:</strong> {{ subject_data.count }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="card border-0 shadow-lg">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No Marks Found</h4>
+                <p class="text-muted">No marks have been added for this student yet.</p>
+                {% if request.user.role == 'teacher' %}
+                <a href="{% url 'teacher_manage_marks' %}" class="btn btn-primary mt-2">
+                    <i class="fas fa-plus-circle me-2"></i>Add Marks
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- Overall Summary -->
+    <div class="card border-0 shadow-lg">
+        <div class="card-header" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;">
+            <h5 class="mb-0">
+                <i class="fas fa-chart-pie me-2"></i>Overall Performance Summary
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-4 mb-3">
+                    <div class="p-3 border rounded shadow-sm">
+                        <i class="fas fa-trophy fa-2x text-warning mb-2"></i>
+                        <h6 class="text-muted mb-1">Total Marks Obtained</h6>
+                        <h2 class="text-primary mb-0">{{ total_marks_obtained|floatformat:1 }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="p-3 border rounded shadow-sm">
+                        <i class="fas fa-star fa-2x text-info mb-2"></i>
+                        <h6 class="text-muted mb-1">Total Maximum Marks</h6>
+                        <h2 class="text-primary mb-0">{{ total_max_marks|floatformat:1 }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="p-3 border rounded shadow-sm">
+                        <i class="fas fa-chart-line fa-2x text-success mb-2"></i>
+                        <h6 class="text-muted mb-1">Overall Percentage</h6>
+                        <h2 class="{% if overall_percentage >= 75 %}text-success{% elif overall_percentage >= 50 %}text-warning{% else %}text-danger{% endif %} mb-0">
+                            {{ overall_percentage|floatformat:1 }}%
+                        </h2>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Overall Progress Bar -->
+            <div class="mt-4">
+                <label class="fw-bold mb-2">Overall Performance</label>
+                <div class="progress" style="height: 35px; border-radius: 10px;">
+                    <div class="progress-bar 
+                        {% if overall_percentage >= 75 %}bg-success
+                        {% elif overall_percentage >= 50 %}bg-warning
+                        {% else %}bg-danger{% endif %}" 
+                        style="width: {{ overall_percentage }}%; font-weight: bold; font-size: 14px;">
+                        {{ overall_percentage|floatformat:1 }}% - 
+                        {% if overall_percentage >= 90 %}
+                            🎉 Excellent! Outstanding Performance 🌟
+                        {% elif overall_percentage >= 75 %}
+                            👍 Good Job! Keep it up
+                        {% elif overall_percentage >= 50 %}
+                            📚 Need Improvement - Work Harder
+                        {% elif overall_percentage >= 35 %}
+                            ⚠️ Below Average - Need Focus
+                        {% else %}
+                            ❌ Poor Performance - Immediate Attention Required
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Overall Grade -->
+            <div class="text-center mt-4">
+                <div class="d-inline-block p-3 rounded shadow-sm" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef);">
+                    <small class="text-muted d-block">FINAL GRADE</small>
+                    <span class="badge 
+                        {% if overall_percentage >= 90 %}bg-success
+                        {% elif overall_percentage >= 80 %}bg-info
+                        {% elif overall_percentage >= 70 %}bg-primary
+                        {% elif overall_percentage >= 60 %}bg-warning
+                        {% elif overall_percentage >= 50 %}bg-orange
+                        {% else %}bg-danger{% endif %} fs-1 p-3 mt-1">
+                        {{ overall_marks_grade }}
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Performance Message -->
+            <div class="mt-4 text-center">
+                {% if overall_percentage >= 90 %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-trophy me-2"></i>
+                        Excellent performance! You are among the top performers. Keep shining! 🌟
+                    </div>
+                {% elif overall_percentage >= 75 %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-smile me-2"></i>
+                        Good job! You have performed well. Keep working hard to achieve more! 👍
+                    </div>
+                {% elif overall_percentage >= 50 %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Need improvement! Focus more on your studies and practice regularly. 📚
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-frown me-2"></i>
+                        Poor performance! Please consult with your teachers and parents to improve. ⚠️
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="mt-4 d-flex gap-2 justify-content-end">
+        {% if request.user.role == 'teacher' %}
+        <a href="{% url 'teacher_manage_marks' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Marks
+        </a>
+        <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-primary">
+            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-success">
+            <i class="fas fa-print me-2"></i>Print Report
+        </button>
+        {% else %}
+        <a href="{% url 'student_dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-primary">
+            <i class="fas fa-print me-2"></i>Print Report
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .bg-orange {
+        background-color: #fd7e14 !important;
+    }
+    .progress {
+        border-radius: 10px;
+        background-color: #e9ecef;
+        overflow: hidden;
+    }
+    .progress-bar {
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: width 1s ease-in-out;
+    }
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
+    }
+    .table-hover tbody tr:hover {
+        background-color: rgba(102,126,234,0.05);
+    }
+    .badge {
+        border-radius: 20px;
+        padding: 8px 15px;
+    }
+    
+    /* Print Styles */
+    @media print {
+        .navbar, .sidebar, .btn, .footer, .alert, .action-buttons {
+            display: none !important;
+        }
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+        .progress-bar {
+            background-color: #000 !important;
+            color: #fff !important;
+        }
+        body {
+            background: white !important;
+        }
+        .container-fluid {
+            padding: 0 !important;
+        }
+    }
+    
+    /* Animation for progress bars */
+    @keyframes slideIn {
+        from { width: 0; }
+        to { width: var(--target-width); }
+    }
+    
+    .progress-bar {
+        animation: slideIn 0.8s ease-out;
+    }
+</style>
+
+<script>
+    // Auto-hide alerts after 5 seconds
+    setTimeout(function() {
+        var alerts = document.querySelectorAll('.alert:not(.alert-secondary):not(.alert-info):not(.alert-warning):not(.alert-danger):not(.alert-success)');
+        alerts.forEach(function(alert) {
+            alert.style.opacity = '0';
+            setTimeout(function() {
+                if(alert.parentNode) alert.remove();
+            }, 300);
+        });
+    }, 5000);
+    
+    // Animate progress bars on load
+    document.addEventListener('DOMContentLoaded', function() {
+        var progressBars = document.querySelectorAll('.progress-bar');
+        progressBars.forEach(function(bar) {
+            var width = bar.style.width;
+            bar.style.width = '0';
+            setTimeout(function() {
+                bar.style.width = width;
+                bar.style.transition = 'width 1s ease-in-out';
+            }, 100);
+        });
+    });
+</script>
+{% endblock %}

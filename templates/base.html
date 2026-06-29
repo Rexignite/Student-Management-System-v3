@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Student Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --success: #1cc88a;
+            --danger: #e74a3b;
+            --warning: #f6c23e;
+            --info: #36b9cc;
+            --dark: #0f0f1a;
+            --light: #f8f9fc;
+            --gradient-start: #0f0f1a;
+            --gradient-end: #1a1a2e;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Nunito', 'Segoe UI', sans-serif;
+            background-color: var(--light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* ==================== AUTH PAGE STYLES ==================== */
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            padding: 20px;
+        }
+        
+        .auth-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            max-width: 450px;
+            width: 100%;
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ==================== HEADER / NAVBAR ==================== */
+        .navbar {
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            padding: 0.8rem 1rem;
+            position: relative;
+            overflow: hidden;
+            z-index: 1000;
+        }
+        
+        .navbar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+        }
+        
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: white !important;
+            letter-spacing: 1px;
+        }
+        
+        @media (min-width: 768px) {
+            .navbar-brand {
+                font-size: 1.5rem;
+            }
+        }
+        
+        .navbar-brand i {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: none;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.85) !important;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            color: white !important;
+            transform: translateY(-2px);
+        }
+        
+        /* Dropdown Menu Styles */
+        .dropdown-menu {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            margin-top: 10px;
+            min-width: 180px;
+        }
+        
+        .dropdown-item {
+            padding: 10px 20px;
+            transition: all 0.3s;
+            color: #2c3e50;
+        }
+        
+        .dropdown-item i {
+            width: 20px;
+            color: #667eea;
+        }
+        
+        .dropdown-item:hover {
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            padding-left: 25px;
+        }
+        
+        .dropdown-item.text-danger {
+            color: #e74a3b !important;
+        }
+        
+        .dropdown-item.text-danger i {
+            color: #e74a3b;
+        }
+        
+        /* ==================== RESPONSIVE SIDEBAR STYLES ==================== */
+        /* Mobile Sidebar Toggle Button */
+        .sidebar-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1050;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 20px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .sidebar-toggle i {
+            font-size: 1.2rem;
+        }
+        
+        /* Sidebar Desktop Styles */
+        .sidebar {
+            min-height: calc(100vh - 70px);
+            background: #ffffff;
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.08);
+            overflow-y: auto;
+            border-right: 1px solid #e9ecef;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 5px;
+        }
+        
+        .sidebar .nav {
+            padding: 20px 0 20px 0;
+        }
+        
+        .sidebar .nav-link {
+            color: #2c3e50;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin: 0 12px;
+            border-radius: 10px;
+        }
+        
+        @media (min-width: 1200px) {
+            .sidebar .nav-link {
+                font-size: 0.95rem;
+            }
+        }
+        
+        .sidebar .nav-link i {
+            width: 30px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            color: #667eea;
+        }
+        
+        .sidebar .nav-link span {
+            flex: 1;
+            color: #2c3e50;
+        }
+        
+        /* LOGOUT BUTTON STYLES */
+        .sidebar .logout-top {
+            background: linear-gradient(135deg, #e74a3b, #c0392b);
+            margin: 0 12px 15px 12px;
+            border-radius: 10px;
+        }
+        
+        .sidebar .logout-top i, .sidebar .logout-top span {
+            color: white !important;
+        }
+        
+        .sidebar .logout-top:hover {
+            background: linear-gradient(135deg, #c0392b, #a93226);
+            transform: translateX(5px);
+        }
+        
+        .sidebar .nav-link .float-end {
+            margin-left: auto;
+            font-size: 0.7rem;
+            transition: transform 0.3s;
+            color: #a0aec0;
+        }
+        
+        .sidebar .nav-link:hover {
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+        }
+        
+        .sidebar .nav-link:hover i {
+            transform: scale(1.1);
+        }
+        
+        .sidebar .nav-link.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .sidebar .nav-link.active span, .sidebar .nav-link.active i, .sidebar .nav-link.active .float-end {
+            color: white;
+        }
+        
+        /* Collapse Menu Styles */
+        .sidebar .collapse, .sidebar .collapsing {
+            margin-left: 15px;
+        }
+        
+        .sidebar .collapse .nav-link {
+            padding-left: 45px;
+            font-size: 0.8rem;
+            margin: 2px 12px;
+        }
+        
+        .sidebar .collapse .nav-link i {
+            width: 25px;
+            font-size: 0.75rem;
+            color: #667eea;
+        }
+        
+        .sidebar .collapse .nav-link span {
+            color: #4a5568;
+        }
+        
+        .sidebar .collapse .nav-link:hover {
+            background: #f0f4ff;
+        }
+        
+        .sidebar .collapse .nav-link.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+        
+        .sidebar .collapse .nav-link.active span, .sidebar .collapse .nav-link.active i {
+            color: white;
+        }
+        
+        /* Sidebar Divider */
+        .sidebar-divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 15px 20px;
+        }
+        
+        /* ==================== MOBILE RESPONSIVE (max-width: 768px) ==================== */
+        @media (max-width: 768px) {
+            /* Show toggle button on mobile */
+            .sidebar-toggle {
+                display: flex;
+            }
+            
+            /* Sidebar becomes off-canvas on mobile */
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                width: 270px;
+                height: 100%;
+                z-index: 1060;
+                transition: left 0.3s ease;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+                border-right: none;
+            }
+            
+            .sidebar.open {
+                left: 0;
+            }
+            
+            /* Overlay for sidebar on mobile */
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 1055;
+                display: none;
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
+            }
+            
+            /* Main content takes full width on mobile */
+            .col-md-10 {
+                width: 100%;
+                padding: 15px !important;
+            }
+            
+            /* Stats cards on mobile */
+            .stat-card h2 {
+                font-size: 1.3rem;
+            }
+            
+            /* Buttons on mobile */
+            .btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            /* Cards on mobile */
+            .card {
+                margin-bottom: 15px;
+            }
+            
+            .card-header {
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+            
+            /* Footer on mobile */
+            .footer {
+                padding: 30px 0 15px;
+                text-align: center;
+            }
+            
+            .footer h6:after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            
+            .social-icons {
+                justify-content: center;
+            }
+            
+            .contact-info {
+                text-align: center;
+            }
+            
+            .contact-info i {
+                width: auto;
+                margin-right: 5px;
+            }
+            
+            /* Form elements on mobile */
+            .form-control, .form-select {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+        }
+        
+        /* ==================== TABLET RESPONSIVE (769px to 991px) ==================== */
+        @media (min-width: 769px) and (max-width: 991px) {
+            .sidebar .nav-link {
+                padding: 10px 15px;
+                font-size: 0.8rem;
+                margin: 0 8px;
+            }
+            
+            .sidebar .nav-link i {
+                width: 25px;
+                font-size: 0.9rem;
+            }
+            
+            .sidebar .collapse .nav-link {
+                padding-left: 38px;
+                font-size: 0.75rem;
+            }
+            
+            .col-md-10 {
+                padding: 15px !important;
+            }
+        }
+        
+        /* ==================== LARGE DESKTOP (min-width: 1200px) ==================== */
+        @media (min-width: 1200px) {
+            .container-fluid {
+                padding-left: 0;
+                padding-right: 0;
+            }
+        }
+        
+        /* ==================== CARD STYLES ==================== */
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58,59,69,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 2rem 0 rgba(58,59,69,0.2);
+        }
+        
+        .card-header {
+            background: white;
+            border-bottom: 2px solid #f0f0f0;
+            padding: 18px 25px;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 576px) {
+            .card-header {
+                padding: 12px 15px;
+            }
+        }
+        
+        /* ==================== STAT CARDS ==================== */
+        .stat-card {
+            border-left: 4px solid;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        
+        .stat-card h2 { 
+            font-size: 1.8rem; 
+            font-weight: 800; 
+            margin-bottom: 0; 
+        }
+        
+        /* ==================== BUTTON STYLES ==================== */
+        .btn {
+            border-radius: 10px;
+            padding: 8px 22px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+        
+        .btn-gradient:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102,126,234,0.35);
+            color: white;
+        }
+        
+        /* ==================== FORM STYLES ==================== */
+        .form-control, .form-select {
+            border: 1px solid #d1d3e2;
+            border-radius: 10px;
+            padding: 0.7rem 0.85rem;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+            outline: none;
+        }
+        
+        /* ==================== TABLE STYLES with Responsive ==================== */
+        .table-responsive-custom {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            min-width: 500px;
+        }
+        
+        @media (max-width: 768px) {
+            .table {
+                min-width: 400px;
+            }
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+            color: white;
+            border: none;
+            padding: 12px 10px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .table tbody td {
+            padding: 10px;
+            font-size: 13px;
+        }
+        
+        .table tbody tr {
+            transition: background 0.3s;
+        }
+        
+        .table tbody tr:hover { 
+            background: linear-gradient(135deg, #667eea05, #764ba205);
+        }
+        
+        /* ==================== ALERT STYLES ==================== */
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 12px 16px;
+            animation: slideIn 0.3s ease-out;
+            font-size: 13px;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        /* ==================== BADGE STYLES ==================== */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 10px;
+        }
+        
+        /* ==================== FOOTER STYLES ==================== */
+        .footer {
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+            color: #ffffff;
+            padding: 40px 0 20px;
+            margin-top: auto;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+        }
+        
+        .footer-brand h4 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .footer-brand p {
+            color: #a0a0a0;
+            line-height: 1.5;
+            font-size: 0.8rem;
+        }
+        
+        .footer h6 {
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 15px;
+            position: relative;
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+        
+        .footer h6:after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 35px;
+            height: 2px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+        
+        .footer ul {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 10px;
+        }
+        
+        .footer ul li {
+            margin-bottom: 8px;
+        }
+        
+        .footer ul li a {
+            color: #a0a0a0;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+        
+        .footer ul li a:hover {
+            color: #667eea;
+            padding-left: 5px;
+        }
+        
+        .social-icons {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .social-icons a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .social-icons a:hover {
+            transform: translateY(-3px);
+        }
+        
+        .social-icons .github { background: #333; }
+        .social-icons .github:hover { background: #667eea; }
+        .social-icons .instagram { background: radial-gradient(circle at 30% 110%, #ffdb8a, #f46f30, #d62976, #962fbf, #4f5bd5); }
+        .social-icons .linkedin { background: #0077b5; }
+        .social-icons .linkedin:hover { background: #005582; }
+        .social-icons .facebook { background: #1877f2; }
+        .social-icons .facebook:hover { background: #0d5bd9; }
+        .social-icons .envelope { background: #e74a3b; }
+        .social-icons .envelope:hover { background: #c0392b; }
+        
+        .contact-info p {
+            margin-bottom: 8px;
+            color: #a0a0a0;
+            font-size: 0.75rem;
+        }
+        
+        .contact-info i {
+            color: #667eea;
+            width: 22px;
+        }
+        
+        .footer hr {
+            border-color: rgba(255,255,255,0.08);
+            margin: 15px 0;
+        }
+        
+        .footer .fa-heart {
+            color: #e74a3b;
+            animation: heartbeat 1.5s ease infinite;
+            display: inline-block;
+        }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        
+        /* ==================== ANIMATIONS ==================== */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <!-- Professional Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="fas fa-graduation-cap me-2"></i>Student<span style="color: #667eea;">MS</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-1"></i> {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{% url 'view_profile' %}"><i class="fas fa-user me-2"></i> My Profile</a></li>
+                            <li><a class="dropdown-item" href="{% url 'edit_profile' %}"><i class="fas fa-edit me-2"></i> Edit Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Mobile Sidebar Toggle Button -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i> Menu
+    </button>
+    
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Professional Sidebar -->
+            <div class="col-md-2 p-0">
+                <div class="sidebar" id="sidebar">
+                    <div class="nav flex-column">
+                        <!-- Logout Button - Top of Sidebar -->
+                        <a href="{% url 'logout' %}" class="nav-link logout-top">
+                            <i class="fas fa-sign-out-alt me-2"></i>
+                            <span>🔴 Logout</span>
+                        </a>
+                        
+                        <!-- Dashboard -->
+                        <a href="{% url 'dashboard' %}" class="nav-link">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        
+                        {% if user.role == 'director' %}
+                        <!-- Student Management Dropdown -->
+                        <a href="#studentMenu" class="nav-link" data-bs-toggle="collapse">
+                            <i class="fas fa-users me-2"></i>
+                            <span>Student Management</span>
+                            <i class="fas fa-chevron-down float-end"></i>
+                        </a>
+                        <div class="collapse" id="studentMenu">
+                            <a href="{% url 'manage_students' %}" class="nav-link">
+                                <i class="fas fa-list me-2"></i> <span>View All Students</span>
+                            </a>
+                            <a href="{% url 'add_student' %}" class="nav-link">
+                                <i class="fas fa-user-plus me-2"></i> <span>Add New Student</span>
+                            </a>
+                        </div>
+                        
+                        <!-- Teacher Management Dropdown -->
+                        <a href="#teacherMenu" class="nav-link" data-bs-toggle="collapse">
+                            <i class="fas fa-chalkboard-user me-2"></i>
+                            <span>Teacher Management</span>
+                            <i class="fas fa-chevron-down float-end"></i>
+                        </a>
+                        <div class="collapse" id="teacherMenu">
+                            <a href="{% url 'manage_teachers' %}" class="nav-link">
+                                <i class="fas fa-list me-2"></i> <span>View All Teachers</span>
+                            </a>
+                            <a href="{% url 'add_teacher' %}" class="nav-link">
+                                <i class="fas fa-chalkboard-user me-2"></i> <span>Add New Teacher</span>
+                            </a>
+                        </div>
+                        
+                        <!-- Subject Management Dropdown -->
+                        <a href="#subjectMenu" class="nav-link" data-bs-toggle="collapse">
+                            <i class="fas fa-book me-2"></i>
+                            <span>Subject Management</span>
+                            <i class="fas fa-chevron-down float-end"></i>
+                        </a>
+                        <div class="collapse" id="subjectMenu">
+                            <a href="{% url 'manage_subjects' %}" class="nav-link">
+                                <i class="fas fa-list me-2"></i> <span>View All Subjects</span>
+                            </a>
+                            <a href="{% url 'add_subject' %}" class="nav-link">
+                                <i class="fas fa-plus me-2"></i> <span>Add New Subject</span>
+                            </a>
+                            <a href="{% url 'assign_teacher_to_subject' 0 %}" class="nav-link">
+                                <i class="fas fa-tasks me-2"></i> <span>Assign Teacher</span>
+                            </a>
+                        </div>
+                        
+                        <div class="sidebar-divider"></div>
+                        
+                        <!-- Attendance Overview -->
+                        <a href="{% url 'attendance_overview' %}" class="nav-link">
+                            <i class="fas fa-calendar-check me-2"></i>
+                            <span>Attendance Overview</span>
+                        </a>
+                        
+                        <!-- CSV Operations Dropdown -->
+                        <a href="#csvMenu" class="nav-link" data-bs-toggle="collapse">
+                            <i class="fas fa-file-csv me-2"></i>
+                            <span>CSV Operations</span>
+                            <i class="fas fa-chevron-down float-end"></i>
+                        </a>
+                        <div class="collapse" id="csvMenu">
+                            <a href="{% url 'upload_students_csv' %}" class="nav-link">
+                                <i class="fas fa-upload me-2"></i> <span>Import Students</span>
+                            </a>
+                            <a href="{% url 'upload_teachers_csv' %}" class="nav-link">
+                                <i class="fas fa-upload me-2"></i> <span>Import Teachers</span>
+                            </a>
+                            <a href="{% url 'upload_subjects_csv' %}" class="nav-link">
+                                <i class="fas fa-upload me-2"></i> <span>Import Subjects</span>
+                            </a>
+                            <a href="{% url 'download_students_csv' %}" class="nav-link">
+                                <i class="fas fa-download me-2"></i> <span>Export Students</span>
+                            </a>
+                            <a href="{% url 'download_teachers_csv' %}" class="nav-link">
+                                <i class="fas fa-download me-2"></i> <span>Export Teachers</span>
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        {% if user.role == 'teacher' %}
+                        <!-- Teacher Dashboard -->
+                        <a href="{% url 'teacher_dashboard' %}" class="nav-link">
+                            <i class="fas fa-chalkboard me-2"></i>
+                            <span>My Dashboard</span>
+                        </a>
+                        
+                        <!-- Attendance Management Dropdown (UPDATED - MONTHLY ATTENDANCE) -->
+                        <a href="#attendanceMenu" class="nav-link" data-bs-toggle="collapse">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            <span>Attendance</span>
+                            <i class="fas fa-chevron-down float-end"></i>
+                        </a>
+                        <div class="collapse" id="attendanceMenu">
+                            <a href="{% url 'monthly_attendance_calendar' %}" class="nav-link">
+                                <i class="fas fa-calendar-alt me-2"></i> <span>Monthly Calendar</span>
+                            </a>
+                            <a href="{% url 'teacher_upload_attendance_csv' %}" class="nav-link">
+                                <i class="fas fa-upload me-2"></i> <span>Upload CSV</span>
+                            </a>
+                        </div>
+                        
+                        <!-- Marks Management -->
+                        <a href="{% url 'teacher_manage_marks' %}" class="nav-link">
+                            <i class="fas fa-star me-2"></i>
+                            <span>Manage Marks</span>
+                        </a>
+                        
+                        <!-- Students List -->
+                        <a href="{% url 'teacher_manage_students' %}" class="nav-link">
+                            <i class="fas fa-users me-2"></i>
+                            <span>Students List</span>
+                        </a>
+                        
+                        <!-- CSV Download -->
+                        <a href="{% url 'download_class_students_csv' %}" class="nav-link">
+                            <i class="fas fa-download me-2"></i>
+                            <span>Download CSV</span>
+                        </a>
+                        {% endif %}
+                        
+                        {% if user.role == 'student' %}
+                        <!-- Student Dashboard -->
+                        <a href="{% url 'student_dashboard' %}" class="nav-link">
+                            <i class="fas fa-id-card me-2"></i>
+                            <span>My Dashboard</span>
+                        </a>
+                        
+                        <!-- My Attendance -->
+                        <a href="{% url 'student_attendance' %}" class="nav-link">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            <span>My Attendance</span>
+                        </a>
+                        
+                        <!-- My Marks -->
+                        <a href="{% url 'student_marks' %}" class="nav-link">
+                            <i class="fas fa-chart-line me-2"></i>
+                            <span>My Marks</span>
+                        </a>
+                        {% endif %}
+                        
+                        <div class="sidebar-divider"></div>
+                        
+                        <!-- Notifications -->
+                        <a href="{% url 'view_notifications' %}" class="nav-link">
+                            <i class="fas fa-bell me-2"></i>
+                            <span>Notifications</span>
+                        </a>
+                        
+                        <!-- My Profile -->
+                        <a href="{% url 'view_profile' %}" class="nav-link">
+                            <i class="fas fa-user-circle me-2"></i>
+                            <span>My Profile</span>
+                        </a>
+                        
+                        <!-- Edit Profile -->
+                        <a href="{% url 'edit_profile' %}" class="nav-link">
+                            <i class="fas fa-edit me-2"></i>
+                            <span>Edit Profile</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-10 p-4">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                            <i class="fas fa-info-circle me-2"></i> {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="auth-container">
+        {% block auth_content %}{% endblock %}
+    </div>
+    {% endif %}
+    
+    <!-- Professional Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                    <div class="footer-brand">
+                        <i class="fas fa-graduation-cap fa-2x mb-2" style="color: #667eea;"></i>
+                        <h4>Student<span style="color: #667eea;">MS</span></h4>
+                        <p class="text-muted small">Streamlining education management with modern technology. Smart, Simple, Secure.</p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                    <h6><i class="fas fa-link me-2"></i> Quick Links</h6>
+                    <ul>
+                        <li><a href="{% url 'dashboard' %}"><i class="fas fa-chevron-right me-1"></i> Dashboard</a></li>
+                        {% if user.role == 'director' %}
+                        <li><a href="{% url 'manage_students' %}"><i class="fas fa-chevron-right me-1"></i> Manage Students</a></li>
+                        <li><a href="{% url 'manage_teachers' %}"><i class="fas fa-chevron-right me-1"></i> Manage Teachers</a></li>
+                        <li><a href="{% url 'manage_subjects' %}"><i class="fas fa-chevron-right me-1"></i> Manage Subjects</a></li>
+                        {% endif %}
+                        {% if user.role == 'teacher' %}
+                        <li><a href="{% url 'teacher_dashboard' %}"><i class="fas fa-chevron-right me-1"></i> Teacher Dashboard</a></li>
+                        {% endif %}
+                        {% if user.role == 'student' %}
+                        <li><a href="{% url 'student_dashboard' %}"><i class="fas fa-chevron-right me-1"></i> Student Dashboard</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                
+                <div class="col-lg-4 col-md-12">
+                    <h6><i class="fas fa-share-alt me-2"></i> Connect With Me</h6>
+                    <div class="social-icons">
+                        <a href="https://github.com/Rexignite" target="_blank" class="github" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="https://www.instagram.com/ritesh_kumar2028" target="_blank" class="instagram" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.linkedin.com/in/ritesh-kumar-41a59034b" target="_blank" class="linkedin" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="https://www.facebook.com/share/1VLjycFECN" target="_blank" class="facebook" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="mailto:riteshyadav.22564@gmail.com" class="envelope" title="Email"><i class="fas fa-envelope"></i></a>
+                    </div>
+                    <div class="contact-info mt-3">
+                        <p><i class="fas fa-envelope me-2"></i> <a href="mailto:riteshyadav.22564@gmail.com">riteshyadav.22564@gmail.com</a></p>
+                        <p><i class="fas fa-phone-alt me-2"></i> <a href="tel:+918969955743">+91 8969955743</a></p>
+                        <p><i class="fas fa-map-marker-alt me-2"></i> PATNA, BIHAR, India</p>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-3">
+            
+            <div class="row align-items-center">
+                <div class="col-md-6 text-md-start text-center mb-3 mb-md-0">
+                    <p class="mb-0 small">
+                        &copy; {% now "Y" %} Student Management System | Made with 
+                        <i class="fas fa-heart"></i> by <strong>Ritesh Kumar</strong>
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end text-center">
+                    <p class="mb-0 small text-muted">
+                        <i class="fas fa-code me-1"></i> Django | 
+                        <i class="fas fa-database me-1 ms-2"></i> SQLite | 
+                        <i class="fas fa-mobile-alt me-1 ms-2"></i> Responsive
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle sidebar on mobile
+        function toggleSidebar() {
+            var sidebar = document.getElementById('sidebar');
+            var overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+        
+        // Close sidebar
+        function closeSidebar() {
+            var sidebar = document.getElementById('sidebar');
+            var overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+        
+        // Close sidebar when window resizes to desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                closeSidebar();
+            }
+        });
+        
+        $(document).ready(function() {
+            // Auto-hide alerts after 5 seconds
+            setTimeout(function() { 
+                $('.alert').fadeOut('slow', function() { 
+                    $(this).remove(); 
+                }); 
+            }, 5000);
+            
+            // Set active class for current URL
+            var currentUrl = window.location.pathname;
+            $('.sidebar .nav-link').each(function() {
+                var linkUrl = $(this).attr('href');
+                if (linkUrl && linkUrl !== '#' && linkUrl !== '' && currentUrl === linkUrl) {
+                    $(this).addClass('active');
+                }
+            });
+            
+            // Keep dropdown expanded based on current page
+            $('.sidebar .collapse').each(function() {
+                if ($(this).find('.active').length) {
+                    $(this).collapse('show');
+                    $(this).siblings('[data-bs-toggle="collapse"]').attr('aria-expanded', 'true');
+                }
+            });
+        });
+        
+        function confirmDelete(message) {
+            return confirm(message || 'Are you sure you want to delete this item?');
+        }
+    </script>
+</body>
+</html>

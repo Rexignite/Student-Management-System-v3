@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Notification{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit"></i> Edit Notification
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   value="{{ notification.title }}" required>
+                            <small class="text-muted">3-200 characters</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="message" name="message" 
+                                      rows="5" required>{{ notification.message }}</textarea>
+                            <small class="text-muted">5-1000 characters</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notification_type" class="form-label">Notification Type</label>
+                            <select class="form-select" id="notification_type" name="notification_type">
+                                {% for type_code, type_name in notification_types %}
+                                <option value="{{ type_code }}" {% if notification.notification_type == type_code %}selected{% endif %}>
+                                    {{ type_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="target_role" class="form-label">Target Audience</label>
+                            <select class="form-select" id="target_role" name="target_role">
+                                {% for role_code, role_name in target_roles %}
+                                <option value="{{ role_code }}" {% if notification.target_role == role_code %}selected{% endif %}>
+                                    {{ role_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'manage_notifications' %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Update Notification
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

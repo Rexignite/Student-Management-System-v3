@@ -1,0 +1,302 @@
+<!-- templates/director/add_teacher.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Add New Teacher</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <form method="POST" id="teacherForm" novalidate>
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label>Username *</label>
+                    <input type="text" name="username" id="username" class="form-control" 
+                           value="{{ old.username|default:'' }}" required>
+                    <div class="invalid-feedback" id="usernameError"></div>
+                    <small class="text-muted">Min 3 characters (letters, numbers, underscore)</small>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Password *</label>
+                    <input type="password" name="password" id="password" class="form-control" required>
+                    <div class="invalid-feedback" id="passwordError"></div>
+                    <small class="text-muted">Min 6 chars, 1 uppercase, 1 number</small>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Confirm Password *</label>
+                    <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
+                    <div class="invalid-feedback" id="confirmPasswordError"></div>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>First Name *</label>
+                    <input type="text" name="first_name" id="first_name" class="form-control" 
+                           value="{{ old.first_name|default:'' }}" required>
+                    <div class="invalid-feedback" id="firstNameError"></div>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Last Name *</label>
+                    <input type="text" name="last_name" id="last_name" class="form-control" 
+                           value="{{ old.last_name|default:'' }}" required>
+                    <div class="invalid-feedback" id="lastNameError"></div>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Teacher ID *</label>
+                    <input type="text" name="teacher_id" id="teacher_id" class="form-control" 
+                           value="{{ old.teacher_id|default:'' }}" required>
+                    <div class="invalid-feedback" id="teacherIdError"></div>
+                    <small class="text-muted">e.g., TCH001 (unique)</small>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label>Subject *</label>
+                    <input type="text" name="subject" id="subject" class="form-control" 
+                           value="{{ old.subject|default:'' }}" required>
+                    <div class="invalid-feedback" id="subjectError"></div>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Qualification *</label>
+                    <input type="text" name="qualification" id="qualification" class="form-control" 
+                           value="{{ old.qualification|default:'' }}" required>
+                    <div class="invalid-feedback" id="qualificationError"></div>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Experience (Years) *</label>
+                    <input type="number" name="experience_years" id="experience_years" class="form-control" 
+                           value="{{ old.experience_years|default:'' }}" min="0" max="50" required>
+                    <div class="invalid-feedback" id="experienceError"></div>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Phone Number *</label>
+                    <input type="tel" name="phone" id="phone" class="form-control" 
+                           value="{{ old.phone|default:'' }}" required>
+                    <div class="invalid-feedback" id="phoneError"></div>
+                    <small class="text-muted">10-digit Indian mobile number (starts with 6,7,8,9)</small>
+                </div>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-success mt-3">Add Teacher</button>
+        <a href="{% url 'manage_teachers' %}" class="btn btn-secondary mt-3">Cancel</a>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('teacherForm');
+    
+    const validations = {
+        username: {
+            required: true,
+            pattern: /^[a-zA-Z0-9_]{3,}$/,
+            message: 'Username must be at least 3 characters (letters, numbers, underscore)'
+        },
+        password: {
+            required: true,
+            minLength: 6,
+            pattern: /^(?=.*[A-Z])(?=.*\d)/,
+            message: 'Password must be at least 6 characters with 1 uppercase and 1 number'
+        },
+        confirm_password: {
+            required: true,
+            matchWith: 'password',
+            message: 'Passwords do not match'
+        },
+        first_name: {
+            required: true,
+            pattern: /^[A-Za-z]{2,30}$/,
+            message: 'First name must contain only letters (min 2 characters)'
+        },
+        last_name: {
+            required: true,
+            pattern: /^[A-Za-z]{2,30}$/,
+            message: 'Last name must contain only letters (min 2 characters)'
+        },
+        teacher_id: {
+            required: true,
+            pattern: /^[A-Za-z0-9]{3,}$/,
+            message: 'Teacher ID must be at least 3 characters'
+        },
+        subject: {
+            required: true,
+            pattern: /^[A-Za-z\s]{2,50}$/,
+            message: 'Subject must contain only letters and spaces'
+        },
+        qualification: {
+            required: true,
+            minLength: 2,
+            message: 'Qualification is required'
+        },
+        experience_years: {
+            required: true,
+            min: 0,
+            max: 50,
+            message: 'Experience must be between 0 and 50 years'
+        },
+        phone: {
+            required: true,
+            pattern: /^[6-9]\d{9}$/,
+            message: 'Enter a valid 10-digit Indian mobile number (starts with 6,7,8,9)'
+        }
+    };
+    
+    function showError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.add('is-invalid');
+            const errorDiv = document.getElementById(`${fieldId}Error`);
+            if (errorDiv) errorDiv.textContent = message;
+        }
+    }
+    
+    function clearError(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.remove('is-invalid');
+            const errorDiv = document.getElementById(`${fieldId}Error`);
+            if (errorDiv) errorDiv.textContent = '';
+        }
+    }
+    
+    function validateField(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (!field) return true;
+        
+        const value = field.value;
+        const rule = validations[fieldId];
+        
+        if (!rule) return true;
+        
+        if (rule.required && !value.trim()) {
+            showError(fieldId, 'This field is required');
+            return false;
+        }
+        
+        if (rule.pattern && value && !rule.pattern.test(value)) {
+            showError(fieldId, rule.message);
+            return false;
+        }
+        
+        if (rule.minLength && value.length < rule.minLength) {
+            showError(fieldId, rule.message);
+            return false;
+        }
+        
+        if ((rule.min !== undefined || rule.max !== undefined) && value) {
+            const num = Number(value);
+            if (rule.min !== undefined && num < rule.min) {
+                showError(fieldId, rule.message);
+                return false;
+            }
+            if (rule.max !== undefined && num > rule.max) {
+                showError(fieldId, rule.message);
+                return false;
+            }
+        }
+        
+        if (rule.matchWith) {
+            const otherField = document.getElementById(rule.matchWith);
+            if (otherField && value !== otherField.value) {
+                showError(fieldId, rule.message);
+                return false;
+            }
+        }
+        
+        clearError(fieldId);
+        return true;
+    }
+    
+    // Attach real-time validation
+    Object.keys(validations).forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', () => validateField(fieldId));
+            field.addEventListener('blur', () => validateField(fieldId));
+        }
+    });
+    
+    // Special handler for confirm password
+    const passwordField = document.getElementById('password');
+    const confirmField = document.getElementById('confirm_password');
+    if (passwordField && confirmField) {
+        passwordField.addEventListener('input', () => validateField('confirm_password'));
+        confirmField.addEventListener('input', () => validateField('confirm_password'));
+    }
+    
+    // Phone number formatting
+    const phoneField = document.getElementById('phone');
+    if (phoneField) {
+        phoneField.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+        });
+    }
+    
+    // Form submit
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        Object.keys(validations).forEach(fieldId => {
+            if (!validateField(fieldId)) isValid = false;
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('❌ Please fix all validation errors before submitting.');
+            
+            const firstError = document.querySelector('.is-invalid');
+            if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+});
+</script>
+
+<style>
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+.invalid-feedback {
+    display: block;
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+.alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+.alert-error, .alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+.form-group label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+small.text-muted {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+</style>
+{% endblock %}

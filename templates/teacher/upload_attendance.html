@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>📤 Upload Attendance from CSV</h4>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="alert alert-info">
+                <h5>📋 CSV Format Instructions:</h5>
+                <p>Your CSV file must have the following columns (in any order):</p>
+                <ul>
+                    <li><strong>roll_number</strong> - Student roll number (required)</li>
+                    <li><strong>status</strong> - Present / Absent / Late / Leave (required)</li>
+                    <li><strong>date</strong> - Date in YYYY-MM-DD format (required)</li>
+                    <li><strong>session</strong> - AM / PM (optional, defaults to AM)</li>
+                    <li><strong>remarks</strong> - Any remarks (optional)</li>
+                </ul>
+            </div>
+            
+            {% if not subjects %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>No subjects assigned!</strong> Please contact the director to assign subjects to you.
+            </div>
+            {% endif %}
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="subject" class="form-label fw-bold">Select Subject <span class="text-danger">*</span></label>
+                    <select class="form-select" id="subject" name="subject" required>
+                        <option value="">-- Select Subject --</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}">
+                            {{ subject.subject_name }} {% if subject.subject_code %}({{ subject.subject_code }}){% endif %}
+                        </option>
+                        {% empty %}
+                        <option value="" disabled>No subjects assigned to you</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Choose the subject for attendance</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="session" class="form-label">Session:</label>
+                    <select class="form-select" id="session" name="session">
+                        <option value="AM">AM Session</option>
+                        <option value="PM">PM Session</option>
+                    </select>
+                    <small class="text-muted">Default session if not specified in CSV</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="attendance_date" class="form-label">Attendance Date (Optional):</label>
+                    <input type="date" class="form-control" id="attendance_date" name="attendance_date">
+                    <small class="text-muted">Leave empty to use date from CSV file</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="csv_file" class="form-label fw-bold">Select CSV File <span class="text-danger">*</span></label>
+                    <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                    <small class="text-muted">File must be in CSV format (max 5MB)</small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">📤 Upload & Import</button>
+                <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary">Cancel</a>
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#sampleModal">
+                    📥 Download Sample CSV
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Recent Attendance Records -->
+    <div class="card mt-4">
+        <div class="card-header bg-info text-white">
+            <h4>📊 Recent Attendance Records</h4>
+        </div>
+        <div class="card-body">
+            {% if recent_attendances %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Subject</th>
+                            <th>Present</th>
+                            <th>Absent</th>
+                            <th>Late</th>
+                            <th>Total</th>
+                            <th>Attendance %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attendance in recent_attendances %}
+                        <tr>
+                            <td>{{ attendance.date|date:"Y-m-d" }}</td>
+                            <td>{{ attendance.subject.subject_name }}</td>
+                            <td class="text-success"><strong>{{ attendance.present }}</strong></td>
+                            <td class="text-danger"><strong>{{ attendance.absent }}</strong></td>
+                            <td class="text-warning"><strong>{{ attendance.late }}</strong></td>
+                            <td>{{ attendance.total }}</td>
+                            <td>
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {{ attendance.percentage }}%">
+                                        {{ attendance.percentage }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-3">
+                <p class="text-muted">No attendance records found yet.</p>
+                <small>Upload attendance using CSV to see records here.</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Sample CSV Modal -->
+<div class="modal fade" id="sampleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">📥 Download Sample CSV</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Sample CSV Format:</h6>
+                <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto;">
+roll_number,status,date,session,remarks
+2024001,Present,2025-05-06,AM,
+2024002,Absent,2025-05-06,AM,Sick
+2024003,Late,2025-05-06,PM,Traffic
+2024004,Present,2025-05-06,AM,
+2024005,Leave,2025-05-06,PM,Family function</pre>
+                
+                <h6 class="mt-3">Status Values:</h6>
+                <ul>
+                    <li><span class="badge bg-success">Present</span> or <span class="badge bg-success">p</span> - Student present</li>
+                    <li><span class="badge bg-danger">Absent</span> or <span class="badge bg-danger">a</span> - Student absent</li>
+                    <li><span class="badge bg-warning">Late</span> or <span class="badge bg-warning">l</span> - Student came late</li>
+                    <li><span class="badge bg-info">Leave</span> or <span class="badge bg-info">lv</span> - Student on leave</li>
+                </ul>
+                
+                <h6>Session Values:</h6>
+                <ul>
+                    <li><strong>AM</strong> - Morning session</li>
+                    <li><strong>PM</strong> - Afternoon session</li>
+                </ul>
+                
+                <div class="alert alert-info mt-3">
+                    <strong>💡 Tip:</strong> Date format must be <strong>YYYY-MM-DD</strong><br>
+                    Example: 2025-05-06 for May 6, 2025
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="downloadSampleCSV()">
+                    📥 Download Sample
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+                <h5 class="mt-3">Processing...</h5>
+                <p class="text-muted">Please wait while we upload attendance</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .progress {
+        background-color: #e9ecef;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        line-height: 25px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .table th, .table td {
+        vertical-align: middle;
+    }
+    
+    pre {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 12px;
+    }
+    
+    .form-select, .form-control {
+        border-radius: 8px;
+    }
+    
+    .btn {
+        border-radius: 8px;
+    }
+</style>
+
+<script>
+    let loadingModal;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        
+        // Set today's date as default
+        const today = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('attendance_date');
+        if (dateInput) {
+            dateInput.value = today;
+        }
+        
+        // Form submission
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const subject = document.getElementById('subject').value;
+                const csvFile = document.getElementById('csv_file').files[0];
+                
+                if (!subject) {
+                    e.preventDefault();
+                    showMessage('❌ Please select a subject', 'danger');
+                    return false;
+                }
+                
+                if (!csvFile) {
+                    e.preventDefault();
+                    showMessage('❌ Please select a CSV file', 'danger');
+                    return false;
+                }
+                
+                if (!csvFile.name.endsWith('.csv')) {
+                    e.preventDefault();
+                    showMessage('❌ Please upload a valid CSV file', 'danger');
+                    return false;
+                }
+                
+                if (csvFile.size > 5 * 1024 * 1024) {
+                    e.preventDefault();
+                    showMessage('❌ File size must be less than 5MB', 'danger');
+                    return false;
+                }
+                
+                // Show loading modal
+                loadingModal.show();
+            });
+        }
+    });
+    
+    function showMessage(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        const cardBody = document.querySelector('.card-body');
+        const form = document.querySelector('form');
+        if (cardBody && form) {
+            cardBody.insertBefore(alertDiv, form);
+        } else {
+            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.card'));
+        }
+        setTimeout(() => {
+            if (alertDiv && alertDiv.remove) alertDiv.remove();
+        }, 5000);
+    }
+    
+    function downloadSampleCSV() {
+        const sampleData = [
+            ['roll_number', 'status', 'date', 'session', 'remarks'],
+            ['2024001', 'present', '2025-05-06', 'AM', ''],
+            ['2024002', 'absent', '2025-05-06', 'AM', 'Sick leave'],
+            ['2024003', 'late', '2025-05-06', 'PM', 'Traffic jam'],
+            ['2024004', 'present', '2025-05-06', 'AM', ''],
+            ['2024005', 'leave', '2025-05-06', 'PM', 'Family function']
+        ];
+        
+        let csvContent = sampleData.map(row => row.join(',')).join('\n');
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.setAttribute('download', 'attendance_sample.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        showMessage('✅ Sample CSV downloaded successfully!', 'success');
+        
+        // Close modal after download
+        const modal = bootstrap.Modal.getInstance(document.getElementById('sampleModal'));
+        if (modal) modal.hide();
+    }
+    
+    // Close loading modal when page loads (if coming from POST)
+    window.addEventListener('load', function() {
+        if (loadingModal) {
+            setTimeout(() => {
+                loadingModal.hide();
+            }, 500);
+        }
+    });
+</script>
+{% endblock %}

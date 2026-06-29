@@ -1,0 +1,294 @@
+<!-- templates/student/attendance.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0 fw-bold">
+                                <i class="fas fa-calendar-check me-3"></i>My Attendance
+                            </h2>
+                            <p class="mb-0 mt-2 opacity-75">
+                                <i class="fas fa-user-graduate me-2"></i>{{ student.full_name }} ({{ student.student_id }})
+                            </p>
+                        </div>
+                        <div>
+                            <a href="{% url 'student_monthly_attendance' %}" class="btn btn-light btn-lg rounded-pill me-2">
+                                <i class="fas fa-calendar-alt me-2"></i>Monthly View
+                            </a>
+                            <a href="{% url 'student_dashboard' %}" class="btn btn-outline-light btn-lg rounded-pill">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Cards Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-lg text-white" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-6 fw-bold mb-2">{{ attendance_percentage|floatformat:1 }}%</h2>
+                    <p class="mb-0 text-uppercase small fw-semibold">Overall Attendance</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-lg text-white" style="background: linear-gradient(135deg, #11998e, #38ef7d);">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-6 fw-bold mb-2">{{ total_present }}</h2>
+                    <p class="mb-0 text-uppercase small fw-semibold">Present Days</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-lg text-white" style="background: linear-gradient(135deg, #e74a3b, #c0392b);">
+                <div class="card-body text-center">
+                    <i class="fas fa-times-circle fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-6 fw-bold mb-2">{{ total_absent }}</h2>
+                    <p class="mb-0 text-uppercase small fw-semibold">Absent Days</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-lg text-white" style="background: linear-gradient(135deg, #6c757d, #495057);">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-alt fa-3x mb-3 opacity-75"></i>
+                    <h2 class="display-6 fw-bold mb-2">{{ total_classes }}</h2>
+                    <p class="mb-0 text-uppercase small fw-semibold">Total Classes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Progress Bar Section -->
+    {% if total_classes > 0 %}
+    <div class="card border-0 shadow-lg mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-semibold"><i class="fas fa-chart-simple me-2 text-primary"></i>Attendance Progress</span>
+                <span class="fw-bold text-primary">{{ attendance_percentage|floatformat:1 }}%</span>
+            </div>
+            <div class="progress" style="height: 25px; border-radius: 12px;">
+                <div class="progress-bar 
+                    {% if attendance_percentage >= 75 %}bg-success
+                    {% elif attendance_percentage >= 60 %}bg-warning
+                    {% else %}bg-danger{% endif %}" 
+                    style="width: {{ attendance_percentage }}%; font-weight: bold; font-size: 13px;">
+                    {% if attendance_percentage >= 75 %}🎉 Excellent!{% elif attendance_percentage >= 60 %}📚 Good{% else %}⚠️ Need Improvement{% endif %}
+                </div>
+            </div>
+            {% if attendance_percentage < 75 %}
+            <div class="alert alert-warning mt-3 mb-0 small">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Your attendance is below 75%. Please maintain regular attendance for better academic performance.
+            </div>
+            {% elif attendance_percentage >= 90 %}
+            <div class="alert alert-success mt-3 mb-0 small">
+                <i class="fas fa-star me-2"></i>
+                Excellent! You have outstanding attendance. Keep it up! 🌟
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Attendance Records Table -->
+    <div class="card border-0 shadow-lg">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold text-primary">
+                <i class="fas fa-table-list me-2"></i>Daily Attendance Records
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="text-center"><i class="fas fa-calendar-day me-1"></i> Date</th>
+                            <th class="text-center"><i class="fas fa-book-open me-1"></i> Subject</th>
+                            <th class="text-center"><i class="fas fa-clock me-1"></i> Session</th>
+                            <th class="text-center"><i class="fas fa-flag-checkered me-1"></i> Status</th>
+                            <th><i class="fas fa-comment me-1"></i> Remarks</th>
+                            <th><i class="fas fa-user-check me-1"></i> Marked By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for att in attendances %}
+                        <tr class="align-middle">
+                            <td class="text-center">
+                                <span class="fw-semibold">{{ att.date|date:"d M Y" }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-info text-dark">{{ att.subject.subject_name }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary">{{ att.session|default:"AM" }}</span>
+                            </td>
+                            <td class="text-center">
+                                {% if att.status == 'present' %}
+                                    <span class="badge bg-success px-3 py-2">
+                                        <i class="fas fa-check-circle me-1"></i> Present
+                                    </span>
+                                {% elif att.status == 'absent' %}
+                                    <span class="badge bg-danger px-3 py-2">
+                                        <i class="fas fa-times-circle me-1"></i> Absent
+                                    </span>
+                                {% elif att.status == 'late' %}
+                                    <span class="badge bg-warning text-dark px-3 py-2">
+                                        <i class="fas fa-clock me-1"></i> Late
+                                    </span>
+                                {% elif att.status == 'leave' %}
+                                    <span class="badge bg-info px-3 py-2">
+                                        <i class="fas fa-umbrella-beach me-1"></i> Leave
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary px-3 py-2">
+                                        {{ att.status|default:"-" }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if att.remarks %}
+                                    <span class="text-muted small">{{ att.remarks }}</span>
+                                {% else %}
+                                    <span class="text-muted fst-italic">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <span class="small">{{ att.marked_by.full_name|default:"System" }}</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <i class="fas fa-calendar-times fa-3x text-muted mb-3 d-block"></i>
+                                <h5 class="text-muted">No attendance records found</h5>
+                                <p class="text-muted small">Attendance will appear here once marked by teachers</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="small text-muted">
+                    <i class="fas fa-info-circle me-1"></i> 
+                    Showing {{ attendances|length }} of {{ total_classes }} total attendance records
+                </div>
+                <div>
+                    <a href="{% url 'student_monthly_attendance' %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-calendar-alt me-1"></i> Monthly Calendar View
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Download Buttons -->
+    <div class="mt-4 d-flex justify-content-end gap-2">
+        <a href="{% url 'student_monthly_attendance' %}" class="btn btn-info btn-lg rounded-pill shadow">
+            <i class="fas fa-calendar-alt me-2"></i>Monthly Calendar
+        </a>
+        <a href="{% url 'student_download_attendance_csv' %}" class="btn btn-success btn-lg rounded-pill shadow">
+            <i class="fas fa-download me-2"></i>Download CSV
+        </a>
+    </div>
+</div>
+
+<style>
+    .table th, .table td {
+        vertical-align: middle;
+    }
+    
+    .progress {
+        background-color: #e9ecef;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: width 1s ease-in-out;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .card {
+        animation: fadeInUp 0.5s ease-out;
+    }
+    
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.1s; }
+    .card:nth-child(3) { animation-delay: 0.15s; }
+    .card:nth-child(4) { animation-delay: 0.2s; }
+    
+    @media (max-width: 768px) {
+        .display-6 {
+            font-size: 1.5rem;
+        }
+        
+        .table th, .table td {
+            font-size: 11px;
+            padding: 6px;
+        }
+        
+        .badge {
+            font-size: 9px;
+        }
+        
+        .btn-lg {
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+    }
+</style>
+
+<script>
+    // Animate progress bar on load
+    document.addEventListener('DOMContentLoaded', function() {
+        const progressBar = document.querySelector('.progress-bar');
+        if (progressBar) {
+            const width = progressBar.style.width;
+            progressBar.style.width = '0%';
+            setTimeout(function() {
+                progressBar.style.width = width;
+                progressBar.style.transition = 'width 1s ease-in-out';
+            }, 100);
+        }
+    });
+    
+    // Auto-hide alert after 5 seconds
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            alert.style.opacity = '0';
+            setTimeout(function() {
+                if(alert.parentNode) alert.remove();
+            }, 300);
+        });
+    }, 5000);
+</script>
+{% endblock %}

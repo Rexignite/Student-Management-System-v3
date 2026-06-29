@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0">Delete Student</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <strong>⚠️ Warning!</strong> This action cannot be undone.
+                    </div>
+                    
+                    <p>Are you sure you want to delete the following student?</p>
+                    
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Student ID:</th>
+                            <td>{{ student.student_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Full Name:</th>
+                            <td>{{ student.full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Class:</th>
+                            <td>{{ student.class_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Roll Number:</th>
+                            <td>{{ student.roll_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Parent Name:</th>
+                            <td>{{ student.parent_name|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Parent Phone:</th>
+                            <td>{{ student.parent_phone }}</td>
+                        </tr>
+                    </table>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Yes, Delete Student
+                            </button>
+                            <a href="{% url 'manage_students' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

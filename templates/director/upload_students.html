@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>📤 Upload Students from CSV</h4>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="alert alert-info">
+                <h5>📋 CSV Format Instructions:</h5>
+                <p>Your CSV file must have the following columns (in any order):</p>
+                <ul>
+                    <li><strong>username</strong> - Unique username (required)</li>
+                    <li><strong>student_id</strong> - Unique student ID (required)</li>
+                    <li><strong>full_name</strong> - Student's full name (required)</li>
+                    <li><strong>class_name</strong> - Class/Course name (required)</li>
+                    <li><strong>roll_number</strong> - Roll number (required)</li>
+                    <li><strong>parent_name</strong> - Parent's name (optional)</li>
+                    <li><strong>parent_phone</strong> - Parent's 10-digit phone number (required)</li>
+                    <li><strong>address</strong> - Student's address (required)</li>
+                </ul>
+                <p class="mb-0">📝 <strong>Note:</strong> Default password for uploaded students will be "student@123"</p>
+            </div>
+            
+            <div class="mb-3">
+                <a href="{% url 'download_students_csv' %}" class="btn btn-success">
+                    📥 Download Sample CSV Template
+                </a>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="csv_file" class="form-label">Select CSV File:</label>
+                    <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                </div>
+                <button type="submit" class="btn btn-primary">📤 Upload & Import</button>
+                <a href="{% url 'manage_students' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

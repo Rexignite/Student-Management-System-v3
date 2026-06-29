@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card border-0 shadow-lg">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0">
+                <i class="fas fa-users me-2"></i>Students List
+            </h4>
+            <p class="mb-0 mt-1 opacity-75">View and manage student information</p>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr class="text-center">
+                            <th>Student ID</th>
+                            <th>Full Name</th>
+                            <th>Class</th>
+                            <th>Roll Number</th>
+                            <th>Parent Name</th>
+                            <th>Parent Phone</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr class="align-middle">
+                            <td class="text-center">
+                                <span class="badge bg-secondary">{{ student.student_id|striptags }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ student.full_name|striptags }}</strong>
+                            </td>
+                            <td class="text-center">{{ student.class_name|striptags }}</td>
+                            <td class="text-center">{{ student.roll_number|striptags }}</td>
+                            <td>{{ student.parent_name|default:"—"|striptags }}</td>
+                            <td class="text-center">{{ student.parent_phone|striptags }}</td>
+                            <td class="text-center">
+                                <a href="{% url 'teacher_edit_student' student.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="{% url 'student_marks_detail' student.id %}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-chart-line"></i> Marks
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="fas fa-users-slash fa-3x text-muted mb-3 d-block"></i>
+                                <h5 class="text-muted">No students found</h5>
+                                <p class="text-muted">No students are currently enrolled in the system.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Total Students: <strong>{{ students|length }}</strong>
+                    </small>
+                </div>
+                <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+        cursor: pointer;
+    }
+    .badge {
+        font-size: 12px;
+        padding: 5px 10px;
+    }
+    .btn-sm {
+        margin: 0 2px;
+    }
+</style>
+{% endblock %}

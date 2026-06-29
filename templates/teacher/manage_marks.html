@@ -1,0 +1,376 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0 fw-bold">
+                                <i class="fas fa-star me-3"></i>Manage Marks
+                            </h2>
+                            <p class="mb-0 mt-2 opacity-75">Add and manage student marks for your subjects</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-chalkboard-teacher fa-3x opacity-25"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}times-circle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Left Side: Add Marks Form -->
+        <div class="col-lg-5 mb-4">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #1e3c72, #2a5298);">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>Add / Update Marks
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{% url 'add_marks' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-book text-primary me-1"></i>Select Subject
+                            </label>
+                            <select name="subject_id" class="form-select" id="subjectSelect" required>
+                                <option value="">-- Select Subject --</option>
+                                {% for subject in my_subjects %}
+                                <option value="{{ subject.id }}" data-subject="{{ subject.id }}">
+                                    {{ subject.subject_code }} - {{ subject.subject_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-user-graduate text-primary me-1"></i>Select Student
+                            </label>
+                            <select name="student_id" class="form-select" id="studentSelect" required>
+                                <option value="">-- First Select Subject --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-file-alt text-primary me-1"></i>Exam Type
+                            </label>
+                            <select name="exam_type" class="form-select" required>
+                                <option value="">-- Select Exam Type --</option>
+                                <option value="mid_term">📝 Mid Term Exam</option>
+                                <option value="final_term">📚 Final Term Exam</option>
+                                <option value="assignment">📄 Assignment</option>
+                                <option value="quiz">🎯 Quiz / Class Test</option>
+                                <option value="practical">🔬 Practical / Lab</option>
+                            </select>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-check-circle text-success me-1"></i>Marks Obtained
+                                </label>
+                                <input type="number" step="0.01" name="marks_obtained" class="form-control" 
+                                       placeholder="e.g., 85" min="0" max="100" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-chart-line text-info me-1"></i>Total Marks
+                                </label>
+                                <input type="number" step="0.01" name="total_marks" class="form-control" 
+                                       placeholder="e.g., 100" value="100" min="1" required>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-gradient w-100 py-2">
+                            <i class="fas fa-save me-2"></i>Save Marks
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- CSV Upload Section -->
+            <div class="card border-0 shadow-lg mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-upload me-2"></i>Bulk Upload via CSV
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{% url 'teacher_upload_marks_csv' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Select Subject</label>
+                            <select name="subject_id" class="form-select" required>
+                                <option value="">-- Select Subject --</option>
+                                {% for subject in my_subjects %}
+                                <option value="{{ subject.id }}">{{ subject.subject_code }} - {{ subject.subject_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">CSV File</label>
+                            <input type="file" name="csv_file" class="form-control" accept=".csv" required>
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Format: student_id, exam_type, marks_obtained, total_marks
+                            </small>
+                        </div>
+                        <button type="submit" class="btn btn-info w-100 text-white">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>Upload CSV
+                        </button>
+                    </form>
+                    <hr>
+                    <a href="{% url 'download_marks_sample_csv' %}" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="fas fa-download me-2"></i>Download Sample CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Side: Marks List -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1e3c72, #2a5298);">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2"></i>Marks Records
+                    </h5>
+                    <div>
+                        <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="🔍 Search student..." style="width: 200px;">
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover mb-0" id="marksTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Student ID</th>
+                                    <th>Student Name</th>
+                                    <th>Class</th>
+                                    <th>Subject</th>
+                                    <th>Exam Type</th>
+                                    <th>Marks</th>
+                                    <th>%</th>
+                                    <th>Grade</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mark in marks %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td><span class="badge bg-secondary">{{ mark.student.student_id }}</span></td>
+                                    <td>
+                                        <strong>{{ mark.student.full_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">Roll: {{ mark.student.roll_number }}</small>
+                                    </td>
+                                    <td>{{ mark.student.class_name }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ mark.subject.subject_code }}</span>
+                                        <br>
+                                        <small>{{ mark.subject.subject_name }}</small>
+                                    </td>
+                                    <td>
+                                        {% if mark.exam_type == 'mid_term' %}
+                                            📝 Mid Term
+                                        {% elif mark.exam_type == 'final_term' %}
+                                            📚 Final Term
+                                        {% elif mark.exam_type == 'assignment' %}
+                                            📄 Assignment
+                                        {% elif mark.exam_type == 'quiz' %}
+                                            🎯 Quiz
+                                        {% elif mark.exam_type == 'practical' %}
+                                            🔬 Practical
+                                        {% else %}
+                                            {{ mark.get_exam_type_display }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong class="text-primary">{{ mark.marks_obtained }}</strong> / {{ mark.total_marks }}
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar 
+                                                {% if mark.percentage >= 75 %}bg-success
+                                                {% elif mark.percentage >= 50 %}bg-warning
+                                                {% else %}bg-danger{% endif %}" 
+                                                style="width: {{ mark.percentage }}%">
+                                                {{ mark.percentage|floatformat:1 }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if mark.percentage >= 90 %}bg-success
+                                            {% elif mark.percentage >= 80 %}bg-info
+                                            {% elif mark.percentage >= 70 %}bg-primary
+                                            {% elif mark.percentage >= 60 %}bg-warning
+                                            {% elif mark.percentage >= 50 %}bg-orange
+                                            {% else %}bg-danger{% endif %}">
+                                            {% if mark.percentage >= 90 %}A+ 🌟
+                                            {% elif mark.percentage >= 80 %}A
+                                            {% elif mark.percentage >= 70 %}B+
+                                            {% elif mark.percentage >= 60 %}B
+                                            {% elif mark.percentage >= 50 %}C
+                                            {% elif mark.percentage >= 40 %}D
+                                            {% else %}F ❌{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'edit_marks' mark.id %}" class="btn btn-sm btn-warning" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'delete_marks' mark.id %}" class="btn btn-sm btn-danger" title="Delete" 
+                                               onclick="return confirm('Are you sure you want to delete this mark record?')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                            <a href="{% url 'student_marks_detail' mark.student.id %}" class="btn btn-sm btn-info" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="10" class="text-center py-5">
+                                        <i class="fas fa-chart-line fa-3x text-muted mb-3 d-block"></i>
+                                        <h5 class="text-muted">No marks found</h5>
+                                        <p class="text-muted">Select a subject and add marks for students</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+    }
+    .btn-gradient:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+        color: white;
+    }
+    .bg-orange {
+        background-color: #fd7e14 !important;
+    }
+    .progress {
+        border-radius: 10px;
+        background-color: #e9ecef;
+    }
+    .progress-bar {
+        font-size: 10px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .table th, .table td {
+        vertical-align: middle;
+    }
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    .table-hover tbody tr:hover {
+        background-color: rgba(102,126,234,0.05);
+    }
+    .badge {
+        border-radius: 20px;
+        padding: 5px 12px;
+    }
+    #searchInput {
+        border-radius: 20px;
+        padding: 5px 15px;
+    }
+</style>
+
+<script>
+    // Dynamic student loading based on subject selection
+    document.getElementById('subjectSelect').addEventListener('change', function() {
+        var subjectId = this.value;
+        var studentSelect = document.getElementById('studentSelect');
+        
+        if (subjectId) {
+            // Disable and show loading
+            studentSelect.disabled = true;
+            studentSelect.innerHTML = '<option value="">Loading students...</option>';
+            
+            // Fetch students for this subject
+            fetch(`/teacher/get-students-by-subject/?subject_id=${subjectId}`)
+                .then(response => response.json())
+                .then(data => {
+                    studentSelect.disabled = false;
+                    if (data.success && data.students.length > 0) {
+                        studentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+                        data.students.forEach(function(student) {
+                            studentSelect.innerHTML += `<option value="${student.id}">${student.student_id} - ${student.full_name} (${student.class_name}, Roll: ${student.roll_number})</option>`;
+                        });
+                    } else {
+                        studentSelect.innerHTML = '<option value="">No students enrolled in this subject</option>';
+                    }
+                })
+                .catch(error => {
+                    studentSelect.disabled = false;
+                    studentSelect.innerHTML = '<option value="">Error loading students</option>';
+                    console.error('Error:', error);
+                });
+        } else {
+            studentSelect.innerHTML = '<option value="">-- First Select Subject --</option>';
+        }
+    });
+    
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        var searchText = this.value.toLowerCase();
+        var table = document.getElementById('marksTable');
+        var rows = table.getElementsByTagName('tr');
+        
+        for (var i = 1; i < rows.length; i++) {
+            var row = rows[i];
+            var text = row.textContent.toLowerCase();
+            if (text.indexOf(searchText) > -1) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+    
+    // Auto-hide alerts
+    setTimeout(function() {
+        var alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            alert.style.display = 'none';
+        });
+    }, 5000);
+</script>
+{% endblock %}

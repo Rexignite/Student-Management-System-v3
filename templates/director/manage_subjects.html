@@ -1,0 +1,536 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Subjects | Director Panel{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h1 class="display-6 fw-bold mb-0">
+                <i class="fas fa-book-open text-primary me-2"></i>Subject Management
+            </h1>
+            <p class="text-muted mt-1">Manage courses, assign teachers, and track subject information</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'add_subject' %}" class="btn btn-primary shadow-sm">
+                <i class="fas fa-plus-circle me-2"></i>Add Subject
+            </a>
+            <a href="{% url 'upload_subjects_csv' %}" class="btn btn-outline-secondary shadow-sm">
+                <i class="fas fa-file-csv me-2"></i>Import CSV
+            </a>
+            <button onclick="window.location.reload()" class="btn btn-outline-primary shadow-sm">
+                <i class="fas fa-sync-alt me-2"></i>Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm border-0 rounded-3" role="alert">
+                <i class="fas {% if 'success' in message.tags %}fa-check-circle{% elif 'error' in message.tags %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="stat-card stat-total shadow-sm">
+                <div class="stat-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 class="stat-number">{{ total_subjects|default:"0" }}</h3>
+                    <p class="stat-label">Total Subjects</p>
+                </div>
+                <div class="stat-progress">
+                    <div class="progress-bar" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-assigned shadow-sm">
+                <div class="stat-icon">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 class="stat-number">{{ assigned_subjects|default:"0" }}</h3>
+                    <p class="stat-label">Assigned Teachers</p>
+                </div>
+                <div class="stat-progress">
+                    <div class="progress-bar" style="width: {% if total_subjects > 0 %}{% widthratio assigned_subjects total_subjects 100 %}{% else %}0{% endif %}%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card stat-unassigned shadow-sm">
+                <div class="stat-icon">
+                    <i class="fas fa-user-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 class="stat-number">{{ unassigned_subjects|default:"0" }}</h3>
+                    <p class="stat-label">Needs Attention</p>
+                </div>
+                <div class="stat-progress">
+                    <div class="progress-bar" style="width: {% if total_subjects > 0 %}{% widthratio unassigned_subjects total_subjects 100 %}{% else %}0{% endif %}%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-stat stat-teachers shadow-sm">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 class="stat-number">{{ teachers|length|default:"0" }}</h3>
+                    <p class="stat-label">Active Teachers</p>
+                </div>
+                <div class="stat-progress">
+                    <div class="progress-bar" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subjects Table Card -->
+    <div class="card shadow-lg border-0 rounded-4 mb-5">
+        <div class="card-header bg-white border-0 py-3 px-4 rounded-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <i class="fas fa-table-list text-primary me-2 fs-5"></i>
+                    <span class="fw-semibold fs-5">All Subjects Directory</span>
+                    <span class="badge bg-secondary ms-2">{{ subjects|length }} Records</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <input type="text" id="searchSubject" class="form-control form-control-sm" placeholder="🔍 Search subject..." style="width: 250px;">
+                    <select id="filterTeacher" class="form-select form-select-sm" style="width: 180px;">
+                        <option value="">All Teachers</option>
+                        <option value="assigned">Assigned Only</option>
+                        <option value="unassigned">Unassigned Only</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="subjectsTable">
+                    <thead class="table-light">
+                        <tr class="text-muted">
+                            <th class="ps-4" style="width: 5%">#</th>
+                            <th style="width: 15%">Subject Code</th>
+                            <th style="width: 20%">Subject Name</th>
+                            <th style="width: 25%">Assigned Teacher</th>
+                            <th style="width: 25%">Description</th>
+                            <th style="width: 10%" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if subjects %}
+                            {% for subject in subjects %}
+                            <tr class="subject-row" data-teacher="{% if subject.teacher %}assigned{% else %}unassigned{% endif %}" data-name="{{ subject.subject_name|lower }} {{ subject.subject_code|lower }}">
+                                <td class="ps-4 fw-semibold text-secondary">{{ forloop.counter }}</td>
+                                <td>
+                                    <span class="badge bg-gradient-primary px-3 py-2">{{ subject.subject_code|default:"-" }}</span>
+                                </td>
+                                <td class="fw-semibold">{{ subject.subject_name|default:"-" }}</td>
+                                <td>
+                                    {% if subject.teacher %}
+                                        <div class="d-flex align-items-center">
+                                            <div class="teacher-avatar me-2">
+                                                {% if subject.teacher.profile_pic %}
+                                                    <img src="{{ subject.teacher.profile_pic.url }}" class="rounded-circle" width="32" height="32">
+                                                {% else %}
+                                                    <div class="avatar-placeholder bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                        {{ subject.teacher.full_name|slice:":1" }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">{{ subject.teacher.full_name }}</div>
+                                                <small class="text-muted">{{ subject.teacher.subject }}</small>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span class="badge bg-warning-subtle text-warning border-0 px-3 py-2">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>No Teacher Assigned
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted small">
+                                    {% if subject.description %}
+                                        {{ subject.description|truncatechars:80 }}
+                                    {% else %}
+                                        <span class="text-muted fst-italic">— No description —</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'edit_subject' subject.id %}" class="btn btn-outline-warning" title="Edit Subject">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'assign_teacher_to_subject' subject.id %}" class="btn btn-outline-info" title="Assign Teacher">
+                                            <i class="fas fa-user-plus"></i>
+                                        </a>
+                                        <a href="{% url 'delete_subject' subject.id %}" class="btn btn-outline-danger" title="Delete Subject" 
+                                           onclick="return confirm('⚠️ Are you sure you want to delete "{{ subject.subject_name }}"? This action cannot be undone!')">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <i class="fas fa-folder-open fa-4x text-muted mb-3 d-block"></i>
+                                    <h5 class="text-muted">No Subjects Found</h5>
+                                    <p class="text-muted">Get started by adding your first subject.</p>
+                                    <a href="{% url 'add_subject' %}" class="btn btn-primary mt-2">
+                                        <i class="fas fa-plus-circle me-2"></i>Add Subject
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white border-0 py-3 px-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    {% if subjects %}
+                        Showing {{ subjects|length }} subject{% if subjects|length != 1 %}s{% endif %}
+                    {% else %}
+                        No subjects available
+                    {% endif %}
+                </small>
+                <div class="pagination-info"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher-wise Subjects Section -->
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-white border-0 py-3 px-4">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-chalkboard-user text-info me-2 fs-5"></i>
+                <span class="fw-semibold fs-5">Teacher-wise Subject Distribution</span>
+                <span class="badge bg-info ms-2">Faculty Load</span>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            {% if teachers_with_subjects %}
+                <div class="row g-4">
+                    {% for teacher_data in teachers_with_subjects %}
+                    <div class="col-xl-4 col-md-6">
+                        <div class="teacher-card h-100 border rounded-4 overflow-hidden shadow-sm transition-hover">
+                            <div class="teacher-card-header p-3 {% cycle 'bg-primary' 'bg-success' 'bg-info' 'bg-warning' 'bg-danger' %} bg-opacity-10">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="teacher-avatar-lg">
+                                        {% if teacher_data.teacher.profile_pic %}
+                                            <img src="{{ teacher_data.teacher.profile_pic.url }}" class="rounded-circle" width="55" height="55">
+                                        {% else %}
+                                            <div class="avatar-lg rounded-circle d-flex align-items-center justify-content-center text-white fs-4 fw-bold" style="width: 55px; height: 55px; background: linear-gradient(135deg, #667eea, #764ba2);">
+                                                {{ teacher_data.teacher.full_name|slice:":1" }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="teacher-info flex-grow-1">
+                                        <h5 class="mb-1 fw-bold">{{ teacher_data.teacher.full_name }}</h5>
+                                        <p class="mb-0 small text-muted">
+                                            <i class="fas fa-graduation-cap me-1"></i>{{ teacher_data.teacher.qualification|default:"Qualified Professional" }}
+                                        </p>
+                                    </div>
+                                    <div class="teacher-stats text-end">
+                                        <span class="badge bg-primary rounded-pill fs-6 px-3 py-2">{{ teacher_data.count }}</span>
+                                        <small class="d-block text-muted">Subjects</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="teacher-card-body p-3">
+                                {% if teacher_data.subjects %}
+                                    <div class="subjects-list">
+                                        {% for subject in teacher_data.subjects|slice:":5" %}
+                                            <div class="subject-item d-flex justify-content-between align-items-center py-2 border-bottom">
+                                                <div>
+                                                    <span class="badge bg-secondary me-2">{{ subject.subject_code }}</span>
+                                                    <span>{{ subject.subject_name }}</span>
+                                                </div>
+                                                <a href="{% url 'assign_teacher_to_subject' subject.id %}" class="btn btn-sm btn-outline-info">
+                                                    <i class="fas fa-sync-alt"></i>
+                                                </a>
+                                            </div>
+                                        {% endfor %}
+                                        {% if teacher_data.subjects|length > 5 %}
+                                            <div class="text-center mt-2">
+                                                <small class="text-muted">+{{ teacher_data.subjects|length|add:"-5" }} more subjects</small>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-3">
+                                        <i class="fas fa-times-circle fa-2x text-muted mb-2 d-block"></i>
+                                        <p class="text-muted mb-0 small">No subjects assigned yet</p>
+                                        <a href="{% url 'manage_subjects' %}" class="btn btn-sm btn-outline-primary mt-2">
+                                            <i class="fas fa-plus"></i> Assign Now
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chalkboard-user fa-4x text-muted mb-3 d-block"></i>
+                    <h5 class="text-muted">No Teachers Found</h5>
+                    <p class="text-muted">Please add teachers to start assigning subjects.</p>
+                    <a href="{% url 'add_teacher' %}" class="btn btn-primary mt-2">
+                        <i class="fas fa-plus-circle me-2"></i>Add Teacher
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+/* Statistics Cards */
+.stat-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 1rem;
+}
+
+.stat-total .stat-icon {
+    background: linear-gradient(135deg, #667eea15, #764ba215);
+    color: #667eea;
+}
+
+.stat-assigned .stat-icon {
+    background: linear-gradient(135deg, #28a74515, #20c99715);
+    color: #28a745;
+}
+
+.stat-unassigned .stat-icon {
+    background: linear-gradient(135deg, #ffc10715, #fd7e1415);
+    color: #fd7e14;
+}
+
+.stat-stat-teachers .stat-icon {
+    background: linear-gradient(135deg, #17a2b815, #13849615);
+    color: #17a2b8;
+}
+
+.stat-number {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 0;
+    color: #2c3e50;
+}
+
+.stat-label {
+    color: #6c757d;
+    margin-bottom: 0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #e9ecef;
+}
+
+.stat-progress .progress-bar {
+    height: 100%;
+    border-radius: 0;
+}
+
+.stat-total .progress-bar { background: linear-gradient(90deg, #667eea, #764ba2); width: 100%; }
+.stat-assigned .progress-bar { background: linear-gradient(90deg, #28a745, #20c997); }
+.stat-unassigned .progress-bar { background: linear-gradient(90deg, #ffc107, #fd7e14); }
+.stat-stat-teachers .progress-bar { background: linear-gradient(90deg, #17a2b8, #138496); width: 100%; }
+
+/* Table styling */
+.table th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-top: none;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 1rem 0.75rem;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.bg-warning-subtle {
+    background: rgba(255, 193, 7, 0.15);
+}
+
+/* Teacher Card */
+.teacher-card {
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.teacher-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12) !important;
+}
+
+.teacher-avatar-lg {
+    width: 55px;
+    height: 55px;
+}
+
+.subject-item {
+    transition: background 0.2s;
+    padding: 0.5rem 0;
+}
+
+.subject-item:hover {
+    background: #f8f9fa;
+    padding-left: 0.5rem;
+    border-radius: 8px;
+}
+
+.transition-hover {
+    transition: all 0.3s ease;
+}
+
+/* Avatar placeholder */
+.avatar-placeholder, .avatar-lg {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+/* Button group */
+.btn-group .btn {
+    transition: all 0.2s;
+}
+
+.btn-group .btn:hover {
+    transform: scale(1.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .stat-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+    }
+    
+    .table th, .table td {
+        font-size: 0.8rem;
+    }
+    
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* Search highlight */
+.highlight {
+    background-color: #fff3cd;
+    transition: background 0.2s;
+}
+</style>
+
+<script>
+// Live search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchSubject');
+    const filterSelect = document.getElementById('filterTeacher');
+    const tableRows = document.querySelectorAll('.subject-row');
+    
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const filterValue = filterSelect.value;
+        
+        tableRows.forEach(row => {
+            const dataTeacher = row.getAttribute('data-teacher');
+            const dataName = row.getAttribute('data-name');
+            
+            let showBySearch = true;
+            let showByFilter = true;
+            
+            if (searchTerm && !dataName.includes(searchTerm)) {
+                showBySearch = false;
+            }
+            
+            if (filterValue === 'assigned' && dataTeacher !== 'assigned') {
+                showByFilter = false;
+            } else if (filterValue === 'unassigned' && dataTeacher !== 'unassigned') {
+                showByFilter = false;
+            }
+            
+            if (showBySearch && showByFilter) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        updateRowNumbers();
+    }
+    
+    function updateRowNumbers() {
+        let visibleRows = document.querySelectorAll('.subject-row[style="display: "]');
+        if (visibleRows.length === 0) {
+            visibleRows = document.querySelectorAll('.subject-row:not([style*="display: none"])');
+        }
+        visibleRows.forEach((row, index) => {
+            const firstCell = row.querySelector('td:first-child');
+            if (firstCell) {
+                firstCell.textContent = index + 1;
+            }
+        });
+    }
+    
+    searchInput.addEventListener('keyup', filterTable);
+    filterSelect.addEventListener('change', filterTable);
+});
+</script>
+{% endblock %}

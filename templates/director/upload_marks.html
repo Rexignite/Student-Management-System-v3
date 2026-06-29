@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>📤 Upload Marks from CSV</h4>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="alert alert-info">
+                <h5>📋 CSV Format Instructions:</h5>
+                <p>Your CSV file must have the following columns:</p>
+                <ul>
+                    <li><strong>student_id</strong> - Student ID (required)</li>
+                    <li><strong>exam_type</strong> - Exam type (MIDTERM/FINAL/QUIZ/ASSIGNMENT/PRACTICAL)</li>
+                    <li><strong>marks_obtained</strong> - Marks obtained (required)</li>
+                    <li><strong>total_marks</strong> - Total marks (default: 100)</li>
+                </ul>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="subject_id" class="form-label">Select Subject:</label>
+                    <select class="form-control" id="subject_id" name="subject_id" required>
+                        <option value="">-- Select Subject --</option>
+                        {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.subject_code }} - {{ subject.subject_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="csv_file" class="form-label">Select CSV File:</label>
+                    <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">📤 Upload & Import</button>
+                <a href="{% url 'teacher_manage_marks' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

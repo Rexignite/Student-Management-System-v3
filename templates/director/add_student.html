@@ -1,0 +1,341 @@
+<!-- templates/director/add_student.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Add New Student</h2>
+    
+    <!-- Display Django messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <form method="POST" id="studentForm" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label>Username *</label>
+                    <input type="text" name="username" id="username" class="form-control" 
+                           value="{{ old.username|default:'' }}" required>
+                    <div class="invalid-feedback" id="usernameError"></div>
+                    <small class="text-muted">Min 3 characters (letters, numbers, underscore)</small>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Password *</label>
+                    <input type="password" name="password" id="password" class="form-control" required>
+                    <div class="invalid-feedback" id="passwordError"></div>
+                    <small class="text-muted">Minimum 6 characters</small>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Confirm Password *</label>
+                    <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
+                    <div class="invalid-feedback" id="confirmPasswordError"></div>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>First Name *</label>
+                    <input type="text" name="first_name" id="first_name" class="form-control" 
+                           value="{{ old.first_name|default:'' }}" required>
+                    <div class="invalid-feedback" id="firstNameError"></div>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Last Name *</label>
+                    <input type="text" name="last_name" id="last_name" class="form-control" 
+                           value="{{ old.last_name|default:'' }}" required>
+                    <div class="invalid-feedback" id="lastNameError"></div>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Student ID *</label>
+                    <input type="text" name="student_id" id="student_id" class="form-control" 
+                           value="{{ old.student_id|default:'' }}" required>
+                    <div class="invalid-feedback" id="studentIdError"></div>
+                    <small class="text-muted">e.g., STU001 (unique)</small>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Class/Course *</label>
+                    <input type="text" name="class_name" id="class_name" class="form-control" 
+                           value="{{ old.class_name|default:'' }}" required>
+                    <div class="invalid-feedback" id="classNameError"></div>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Roll Number *</label>
+                    <input type="text" name="roll_number" id="roll_number" class="form-control" 
+                           value="{{ old.roll_number|default:'' }}" required>
+                    <div class="invalid-feedback" id="rollNumberError"></div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label>Parent Name</label>
+                    <input type="text" name="parent_name" id="parent_name" class="form-control" 
+                           value="{{ old.parent_name|default:'' }}">
+                    <div class="invalid-feedback" id="parentNameError"></div>
+                    <small class="text-muted">Optional (only letters and spaces)</small>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Parent Phone *</label>
+                    <input type="tel" name="parent_phone" id="parent_phone" class="form-control" 
+                           value="{{ old.parent_phone|default:'' }}" required>
+                    <div class="invalid-feedback" id="parentPhoneError"></div>
+                    <small class="text-muted">10-digit Indian mobile number (starts with 6,7,8,9)</small>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Address *</label>
+                    <textarea name="address" id="address" class="form-control" rows="3" required>{{ old.address|default:'' }}</textarea>
+                    <div class="invalid-feedback" id="addressError"></div>
+                    <small class="text-muted">Minimum 10 characters</small>
+                </div>
+                
+                <!-- ✅ PROFILE PICTURE FIELD - MOVED INSIDE FORM -->
+                <div class="form-group mb-3">
+                    <label class="form-label">Profile Picture</label>
+                    <input type="file" name="profile_pic" id="profile_pic" class="form-control" accept="image/jpeg,image/png,image/gif,image/jpg">
+                    <div class="invalid-feedback" id="profilePicError"></div>
+                    <small class="text-muted">Max size: 2MB. Allowed: JPG, PNG, GIF</small>
+                </div>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-success mt-3">Add Student</button>
+        <a href="{% url 'manage_students' %}" class="btn btn-secondary mt-3">Cancel</a>
+    </form>
+</div>
+
+<!-- JavaScript for Real-time Validation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('studentForm');
+    
+    // Validation rules
+    const validations = {
+        username: {
+            required: true,
+            pattern: /^[a-zA-Z0-9_]{3,}$/,
+            message: 'Username must be at least 3 characters (letters, numbers, underscore)'
+        },
+        password: {
+            required: true,
+            minLength: 6,
+            message: 'Password must be at least 6 characters'
+        },
+        confirm_password: {
+            required: true,
+            matchWith: 'password',
+            message: 'Passwords do not match'
+        },
+        first_name: {
+            required: true,
+            pattern: /^[A-Za-z]{2,30}$/,
+            message: 'First name must contain only letters (min 2 characters)'
+        },
+        last_name: {
+            required: true,
+            pattern: /^[A-Za-z]{2,30}$/,
+            message: 'Last name must contain only letters (min 2 characters)'
+        },
+        student_id: {
+            required: true,
+            pattern: /^[A-Za-z0-9]{3,}$/,
+            message: 'Student ID must be at least 3 characters'
+        },
+        class_name: {
+            required: true,
+            minLength: 2,
+            message: 'Class/Course is required'
+        },
+        roll_number: {
+            required: true,
+            minLength: 1,
+            message: 'Roll number is required'
+        },
+        parent_name: {
+            required: false,
+            pattern: /^[A-Za-z\s]{3,100}$/,
+            message: 'Parent name must contain only letters and spaces (min 3 chars)'
+        },
+        parent_phone: {
+            required: true,
+            pattern: /^[6-9]\d{9}$/,
+            message: 'Enter a valid 10-digit Indian mobile number (starts with 6,7,8,9)'
+        },
+        address: {
+            required: true,
+            minLength: 10,
+            message: 'Address must be at least 10 characters'
+        },
+        profile_pic: {
+            required: false,
+            maxSize: 2 * 1024 * 1024, // 2MB
+            allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'],
+            message: 'File must be an image (JPG, PNG, GIF) and less than 2MB'
+        }
+    };
+    
+    function showError(fieldId, message) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.add('is-invalid');
+            const errorDiv = document.getElementById(`${fieldId}Error`);
+            if (errorDiv) errorDiv.textContent = message;
+        }
+    }
+    
+    function clearError(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.remove('is-invalid');
+            const errorDiv = document.getElementById(`${fieldId}Error`);
+            if (errorDiv) errorDiv.textContent = '';
+        }
+    }
+    
+    function validateField(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (!field) return true;
+        
+        let value = field.value;
+        const rule = validations[fieldId];
+        
+        if (!rule) return true;
+        
+        // Special handling for file input
+        if (field.type === 'file') {
+            const file = field.files[0];
+            if (file) {
+                if (rule.maxSize && file.size > rule.maxSize) {
+                    showError(fieldId, `File size too large! Maximum ${rule.maxSize / (1024 * 1024)}MB allowed.`);
+                    return false;
+                }
+                if (rule.allowedTypes && !rule.allowedTypes.includes(file.type)) {
+                    showError(fieldId, `Invalid file type! Allowed: ${rule.allowedTypes.join(', ')}`);
+                    return false;
+                }
+            }
+            clearError(fieldId);
+            return true;
+        }
+        
+        if (rule.required && !value.trim()) {
+            showError(fieldId, 'This field is required');
+            return false;
+        }
+        
+        if (value) {
+            if (rule.pattern && !rule.pattern.test(value)) {
+                showError(fieldId, rule.message);
+                return false;
+            }
+            
+            if (rule.minLength && value.length < rule.minLength) {
+                showError(fieldId, rule.message);
+                return false;
+            }
+        }
+        
+        if (rule.matchWith) {
+            const otherField = document.getElementById(rule.matchWith);
+            if (otherField && value !== otherField.value) {
+                showError(fieldId, rule.message);
+                return false;
+            }
+        }
+        
+        clearError(fieldId);
+        return true;
+    }
+    
+    // Attach real-time validation
+    Object.keys(validations).forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', () => validateField(fieldId));
+            field.addEventListener('blur', () => validateField(fieldId));
+            if (field.type === 'file') {
+                field.addEventListener('change', () => validateField(fieldId));
+            }
+        }
+    });
+    
+    // Special handler for confirm password
+    const passwordField = document.getElementById('password');
+    const confirmField = document.getElementById('confirm_password');
+    if (passwordField && confirmField) {
+        passwordField.addEventListener('input', () => validateField('confirm_password'));
+        confirmField.addEventListener('input', () => validateField('confirm_password'));
+    }
+    
+    // Phone number formatting (only digits, max 10)
+    const phoneField = document.getElementById('parent_phone');
+    if (phoneField) {
+        phoneField.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
+        });
+    }
+    
+    // Form submit validation
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        Object.keys(validations).forEach(fieldId => {
+            if (!validateField(fieldId)) isValid = false;
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('❌ Please fix all validation errors before submitting.');
+            
+            // Scroll to first error
+            const firstError = document.querySelector('.is-invalid');
+            if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+});
+</script>
+
+<style>
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+.invalid-feedback {
+    display: block;
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+.alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+.alert-error, .alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+.form-group label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+small.text-muted {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+</style>
+{% endblock %}

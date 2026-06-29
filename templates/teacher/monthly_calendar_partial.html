@@ -1,0 +1,159 @@
+{% load static %}
+
+{% if calendar_data %}
+<div class="card border-0 shadow-lg">
+    <div class="card-header py-3" style="background: linear-gradient(135deg, #1e3c72, #2a5298); color: white;">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-table me-2"></i>
+                    Attendance Calendar - {{ subject_name }}
+                </h5>
+                <small>{{ month_name }}</small>
+            </div>
+            <div class="mt-2 mt-sm-0">
+                <button class="btn btn-sm btn-light" onclick="location.reload()">
+                    <i class="fas fa-sync-alt text-secondary me-1"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+            <table class="table table-bordered table-hover mb-0">
+                <thead class="table-dark">
+                    <tr class="text-center">
+                        <th rowspan="2" style="min-width: 120px">Student Name</th>
+                        <th rowspan="2" style="min-width: 80px">Roll No</th>
+                        <th rowspan="2" style="min-width: 100px">Class</th>
+                        {% for day in calendar_data %}
+                        <th colspan="2" style="min-width: 70px">
+                            {{ day.day_name }}<br>
+                            <small>{{ day.day }}/{{ day.month }}</small>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                    <tr class="text-center">
+                        {% for day in calendar_data %}
+                        <th style="width: 35px">AM</th>
+                        <th style="width: 35px">PM</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if calendar_data %}
+                        {% for student_data in calendar_data.0.students %}
+                        <tr class="align-middle">
+                            <td>
+                                <strong>{{ student_data.student.full_name|truncatechars:25 }}</strong>
+                            </td>
+                            <td class="text-center">{{ student_data.student.roll_number }}</td>
+                            <td class="text-center">{{ student_data.student.class_name }}</td>
+                            {% for day in calendar_data %}
+                                {% for student_day in day.students %}
+                                    {% if student_day.student.id == student_data.student.id %}
+                                    <td class="text-center">
+                                        <span class="attendance-badge badge-{% if student_day.am_status == 'present' %}present{% elif student_day.am_status == 'absent' %}absent{% elif student_day.am_status == 'late' %}late{% elif student_day.am_status == 'leave' %}leave{% else %}default{% endif %}"
+                                              onclick="updateMonthlyAttendance({{ student_data.student.id }}, '{{ day.date|date:'Y-m-d' }}', 'AM', this)"
+                                              style="cursor: pointer; display: inline-block; width: 32px; padding: 4px; border-radius: 6px; text-align: center; font-weight: bold;">
+                                            {% if student_day.am_status == 'present' %}P
+                                            {% elif student_day.am_status == 'absent' %}A
+                                            {% elif student_day.am_status == 'late' %}L
+                                            {% elif student_day.am_status == 'leave' %}LV
+                                            {% else %}—{% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="attendance-badge badge-{% if student_day.pm_status == 'present' %}present{% elif student_day.pm_status == 'absent' %}absent{% elif student_day.pm_status == 'late' %}late{% elif student_day.pm_status == 'leave' %}leave{% else %}default{% endif %}"
+                                              onclick="updateMonthlyAttendance({{ student_data.student.id }}, '{{ day.date|date:'Y-m-d' }}', 'PM', this)"
+                                              style="cursor: pointer; display: inline-block; width: 32px; padding: 4px; border-radius: 6px; text-align: center; font-weight: bold;">
+                                            {% if student_day.pm_status == 'present' %}P
+                                            {% elif student_day.pm_status == 'absent' %}A
+                                            {% elif student_day.pm_status == 'late' %}L
+                                            {% elif student_day.pm_status == 'leave' %}LV
+                                            {% else %}—{% endif %}
+                                        </span>
+                                    </td>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="{{ calendar_data|length|add:3 }}" class="text-center py-5">
+                                <i class="fas fa-users-slash fa-3x text-muted mb-3 d-block"></i>
+                                <h5 class="text-muted">No students found</h5>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer bg-light">
+        <div class="text-center">
+            <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i> 
+                Click on any cell to toggle attendance: 
+                <span class="badge bg-success">P</span> Present → 
+                <span class="badge bg-danger">A</span> Absent → 
+                <span class="badge bg-warning text-dark">L</span> Late → 
+                <span class="badge bg-info text-white">LV</span> Leave → 
+                <span class="badge bg-secondary">-</span> Not Marked
+            </small>
+        </div>
+    </div>
+</div>
+{% elif selected_subject_id %}
+<div class="card border-0 shadow-lg">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-calendar-times fa-4x text-muted mb-4"></i>
+        <h4 class="text-muted">No attendance data available</h4>
+        <p class="text-muted">Select a different month or subject to view attendance</p>
+    </div>
+</div>
+{% else %}
+<div class="card border-0 shadow-lg">
+    <div class="card-body text-center py-5">
+        <i class="fas fa-folder-open fa-4x text-muted mb-4"></i>
+        <h4 class="text-muted">No Calendar Loaded</h4>
+        <p class="text-muted">Please select a subject to load the monthly attendance calendar</p>
+    </div>
+</div>
+{% endif %}
+
+<style>
+    .attendance-badge {
+        transition: all 0.2s ease;
+        font-size: 12px;
+    }
+    .attendance-badge:hover {
+        transform: scale(1.1);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .badge-present {
+        background: #28a745;
+        color: white;
+    }
+    .badge-absent {
+        background: #dc3545;
+        color: white;
+    }
+    .badge-late {
+        background: #ffc107;
+        color: black;
+    }
+    .badge-leave {
+        background: #17a2b8;
+        color: white;
+    }
+    .badge-default {
+        background: #6c757d;
+        color: white;
+        opacity: 0.6;
+    }
+    .table td, .table th {
+        vertical-align: middle;
+    }
+</style>

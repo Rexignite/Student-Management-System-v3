@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>➕ Add New Subject</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="POST" action="{% url 'add_subject' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="subject_code" class="form-label">Subject Code *</label>
+                            <input type="text" class="form-control" id="subject_code" name="subject_code" 
+                                   placeholder="e.g., MATH101, CS101, PHY101" required>
+                            <small class="text-muted">Unique code for subject (will be converted to uppercase)</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="subject_name" class="form-label">Subject Name *</label>
+                            <input type="text" class="form-control" id="subject_name" name="subject_name" 
+                                   placeholder="e.g., Mathematics, Computer Science, Physics" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="teacher" class="form-label">Assign Teacher (Optional)</label>
+                            <select class="form-control" id="teacher" name="teacher">
+                                <option value="">-- Select Teacher --</option>
+                                {% for teacher in teachers %}
+                                    <option value="{{ teacher.id }}">{{ teacher.full_name }} - {{ teacher.subject }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">You can assign teacher later also</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" 
+                                      placeholder="Brief description about the subject"></textarea>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-success">✅ Save Subject</button>
+                            <a href="{% url 'manage_subjects' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

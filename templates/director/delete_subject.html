@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-trash-alt me-2"></i>Delete Subject</h4>
+                </div>
+                <div class="card-body">
+                    <p>Are you sure you want to delete <strong>{{ subject.subject_name }}</strong>?</p>
+                    <p class="text-danger">⚠️ This action cannot be undone!</p>
+                    
+                    {% if subject.teacher %}
+                    <div class="alert alert-warning">
+                        <strong>Note:</strong> This subject is currently assigned to <strong>{{ subject.teacher.full_name }}</strong>.
+                    </div>
+                    {% endif %}
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">🗑️ Yes, Delete</button>
+                        <a href="{% url 'manage_subjects' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div> 
+</div>
+{% endblock %}

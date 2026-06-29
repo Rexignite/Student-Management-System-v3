@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>📤 Upload Teachers from CSV</h4>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="alert alert-info">
+                <h5>📋 CSV Format Instructions:</h5>
+                <p>Your CSV file must have the following columns (in any order):</p>
+                <ul>
+                    <li><strong>username</strong> - Unique username (required)</li>
+                    <li><strong>teacher_id</strong> - Unique teacher ID (required)</li>
+                    <li><strong>full_name</strong> - Teacher's full name (required)</li>
+                    <li><strong>subject</strong> - Subject taught (required)</li>
+                    <li><strong>qualification</strong> - Educational qualification (required)</li>
+                    <li><strong>phone</strong> - 10-digit phone number (required)</li>
+                </ul>
+                <p class="mb-0">📝 <strong>Note:</strong> Default password for uploaded teachers will be "teacher@123"</p>
+            </div>
+            
+            <div class="mb-3">
+                <a href="{% url 'download_teachers_csv' %}" class="btn btn-success">
+                    📥 Download Sample CSV Template
+                </a>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="csv_file" class="form-label">Select CSV File:</label>
+                    <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                </div>
+                <button type="submit" class="btn btn-primary">📤 Upload & Import</button>
+                <a href="{% url 'manage_teachers' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

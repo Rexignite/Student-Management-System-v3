@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Manage Students</h2>
+    
+    <!-- Success/Error Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Student ID</th>
+                    <th>Full Name</th>
+                    <th>Class</th>
+                    <th>Roll Number</th>
+                    <th>Parent Name</th>
+                    <th>Parent Phone</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{ student.student_id }}</td>
+                    <td>{{ student.full_name }}</td>
+                    <td>{{ student.class_name }}</td>
+                    <td>{{ student.roll_number }}</td>
+                    <td>{{ student.parent_name|default:"-" }}</td>
+                    <td>{{ student.parent_phone }}</td>
+                    <td>
+                        <!-- ✅ EDIT BUTTON - SAHI URL -->
+                        <a href="{% url 'edit_student' student.id %}" class="btn btn-sm btn-primary">Edit</a>
+                        
+                        <!-- ✅ DELETE BUTTON - SAHI URL -->
+                        <a href="{% url 'delete_student' student.id %}" class="btn btn-sm btn-danger" 
+                           onclick="return confirm('Are you sure you want to delete {{ student.full_name }}?')">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center">No students found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="mt-3">
+        <a href="{% url 'add_student' %}" class="btn btn-success">Add New Student</a>
+        <a href="{% url 'director_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

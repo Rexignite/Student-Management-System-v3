@@ -1,0 +1,1069 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="teacher-dashboard">
+    <!-- Hero Section with Gradient Background -->
+    <div class="hero-section mb-4">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="welcome-text">
+                        <h1 class="display-5 fw-bold mb-2">
+                            Welcome back, <span class="user-name">{{ teacher.full_name }}</span>
+                        </h1>
+                        <p class="lead mb-0">Manage your classes, attendance, and student performance</p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="profile-dropdown">
+                        <div class="dropdown">
+                            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                                {% if teacher.profile_pic %}
+                                    <img src="{{ teacher.profile_pic.url }}" alt="Profile" 
+                                         class="rounded-circle profile-img shadow-sm">
+                                {% else %}
+                                    <div class="profile-icon rounded-circle bg-gradient-primary">
+                                        <i class="fas fa-user fa-2x"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="ms-2 text-start">
+                                    <small class="text-white-50 d-block">Teacher</small>
+                                    <strong class="text-white">{{ teacher.full_name|truncatechars:15 }}</strong>
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0">
+                                <li><a class="dropdown-item" href="{% url 'view_profile' %}">
+                                    <i class="fas fa-user-circle me-2 text-primary"></i>My Profile
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'edit_profile' %}">
+                                    <i class="fas fa-edit me-2 text-warning"></i>Edit Profile
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards Row -->
+    <div class="stats-grid mb-5">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="stat-card subjects-card animate-card">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 class="stat-number">{{ subjects.count }}</h3>
+                            <p class="stat-label">My Subjects</p>
+                            <span class="stat-trend">
+                                <i class="fas fa-graduation-cap me-1"></i>Assigned
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card students-card animate-card" style="animation-delay: 0.1s;">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 class="stat-number">{{ students.count }}</h3>
+                            <p class="stat-label">Total Students</p>
+                            <span class="stat-trend">
+                                <i class="fas fa-user-graduate me-1"></i>Enrolled
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card monthly-card animate-card" style="animation-delay: 0.2s;">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 class="stat-number">Monthly</h3>
+                            <p class="stat-label">Attendance</p>
+                            <a href="{% url 'monthly_attendance_calendar' %}" class="stat-link">
+                                Mark Now <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card quick-card animate-card" style="animation-delay: 0.3s;">
+                    <div class="stat-card-inner">
+                        <div class="stat-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 class="stat-number">Quick</h3>
+                            <p class="stat-label">Actions</p>
+                            <a href="#quick-actions" class="stat-link">
+                                View All <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Subjects Section -->
+    <div class="section-card mb-5">
+        <div class="section-header">
+            <div class="header-icon">
+                <i class="fas fa-chalkboard"></i>
+            </div>
+            <div class="header-content">
+                <h3 class="section-title">My Subjects</h3>
+                <p class="section-subtitle">Subjects assigned to you for this academic year</p>
+            </div>
+        </div>
+        <div class="section-body">
+            <div class="subjects-grid">
+                {% for subject in subjects %}
+                <div class="subject-card animate-card">
+                    <div class="subject-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="subject-info">
+                        <h4 class="subject-name">{{ subject.subject_name }}</h4>
+                        <p class="subject-code">{{ subject.subject_code }}</p>
+                    </div>
+                    <div class="subject-arrow">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5">
+                    <i class="fas fa-folder-open fa-3x text-muted mb-3 d-block"></i>
+                    <p class="text-muted">No subjects assigned yet.</p>
+                    <small class="text-muted">Contact director for subject assignment</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Students List & Monthly Attendance Row -->
+    <div class="row g-4">
+        <!-- Students List -->
+        <div class="col-md-6">
+            <div class="section-card h-100">
+                <div class="section-header">
+                    <div class="header-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="header-content">
+                        <h3 class="section-title">Students List</h3>
+                        <p class="section-subtitle">View and manage student information</p>
+                    </div>
+                    <div class="header-actions">
+                        <a href="{% url 'teacher_manage_students' %}" class="btn-glass-sm">
+                            View All <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div class="table-responsive">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Full Name</th>
+                                    <th>Class</th>
+                                    <th>Roll Number</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students|slice:":5" %}
+                                <tr class="animate-row">
+                                    <td>
+                                        <span class="student-id">{{ student.student_id }}</span>
+                                    </td>
+                                    <td>{{ student.full_name|striptags }}</td>
+                                    <td>{{ student.class_name|striptags }}</td>
+                                    <td>{{ student.roll_number|striptags }}</td>
+                                    <td>
+                                        <a href="{% url 'teacher_edit_student' student.id %}" class="btn-action btn-edit">
+                                            <i class="fas fa-edit me-1"></i> Edit
+                                        </a>
+                                        <a href="{% url 'student_marks_detail' student.id %}" class="btn-action btn-view">
+                                            <i class="fas fa-chart-line me-1"></i> Marks
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <i class="fas fa-user-graduate fa-3x text-muted mb-3 d-block"></i>
+                                        <p class="text-muted">No students found</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Attendance Calendar -->
+        <div class="col-md-6">
+            <div class="section-card h-100">
+                <div class="section-header">
+                    <div class="header-icon" style="background: linear-gradient(135deg, #11998e20, #38ef7d20);">
+                        <i class="fas fa-calendar-alt" style="color: #11998e;"></i>
+                    </div>
+                    <div class="header-content">
+                        <h3 class="section-title">Monthly Attendance</h3>
+                        <p class="section-subtitle">Mark AM/PM attendance for this month</p>
+                    </div>
+                    <div class="header-actions">
+                        <a href="{% url 'monthly_attendance_calendar' %}" class="btn-glass-sm">
+                            Full View <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <!-- Subject Filter -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-book me-1 text-primary"></i>Select Subject
+                        </label>
+                        <select id="dashboardSubjectSelect" class="form-select">
+                            <option value="">-- Select Subject --</option>
+                            {% for subject in my_subjects %}
+                            <option value="{{ subject.id }}">
+                                {{ subject.subject_name }} ({{ subject.subject_code }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Month Picker -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-calendar-month me-1 text-primary"></i>Select Month
+                        </label>
+                        <div class="input-group">
+                            <button class="btn btn-outline-secondary" id="dashboardPrevMonth">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <input type="month" id="dashboardMonthPicker" class="form-control text-center" 
+                                   value="{{ current_year }}-{% if current_month < 10 %}0{% endif %}{{ current_month }}">
+                            <button class="btn btn-outline-secondary" id="dashboardNextMonth">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Calendar View -->
+                    <div id="dashboardCalendarContainer">
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-alt fa-3x text-muted mb-3 d-block"></i>
+                            <p class="text-muted">Select a subject to load calendar</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Section -->
+    <div class="section-card mt-4" id="quick-actions">
+        <div class="section-header">
+            <div class="header-icon">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <div class="header-content">
+                <h3 class="section-title">Quick Actions</h3>
+                <p class="section-subtitle">Fast access to common operations</p>
+            </div>
+        </div>
+        <div class="section-body">
+            <div class="action-grid">
+                <a href="{% url 'teacher_manage_students' %}" class="action-card">
+                    <div class="action-icon student-action">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="action-info">
+                        <h4>Manage Students</h4>
+                        <p>View and edit student details</p>
+                    </div>
+                    <i class="fas fa-chevron-right action-arrow"></i>
+                </a>
+                <a href="{% url 'monthly_attendance_calendar' %}" class="action-card">
+                    <div class="action-icon monthly-action">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="action-info">
+                        <h4>Monthly Attendance</h4>
+                        <p>Full month attendance view (AM/PM)</p>
+                    </div>
+                    <i class="fas fa-chevron-right action-arrow"></i>
+                </a>
+                <a href="{% url 'teacher_manage_marks' %}" class="action-card">
+                    <div class="action-icon marks-action">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="action-info">
+                        <h4>Add Marks</h4>
+                        <p>Enter student marks and grades</p>
+                    </div>
+                    <i class="fas fa-chevron-right action-arrow"></i>
+                </a>
+                <a href="{% url 'teacher_upload_attendance_csv' %}" class="action-card">
+                    <div class="action-icon upload-action">
+                        <i class="fas fa-upload"></i>
+                    </div>
+                    <div class="action-info">
+                        <h4>Upload CSV</h4>
+                        <p>Bulk attendance upload</p>
+                    </div>
+                    <i class="fas fa-chevron-right action-arrow"></i>
+                </a>
+                <a href="{% url 'download_class_students_csv' %}" class="action-card">
+                    <div class="action-icon download-action">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <div class="action-info">
+                        <h4>Download CSV</h4>
+                        <p>Export student data</p>
+                    </div>
+                    <i class="fas fa-chevron-right action-arrow"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ==================== GLOBAL STYLES ==================== */
+.teacher-dashboard {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    min-height: calc(100vh - 60px);
+    margin: -24px;
+    padding: 24px;
+}
+
+/* ==================== HERO SECTION ==================== */
+.hero-section {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    border-radius: 24px;
+    padding: 30px 40px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(17, 153, 142, 0.3);
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 70%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.05);
+    transform: rotate(35deg);
+    pointer-events: none;
+}
+
+.welcome-text h1 {
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.user-name {
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: none;
+}
+
+.profile-img {
+    width: 55px;
+    height: 55px;
+    object-fit: cover;
+    border: 3px solid rgba(255,255,255,0.3);
+    transition: transform 0.3s;
+}
+
+.profile-img:hover {
+    transform: scale(1.05);
+}
+
+.profile-icon {
+    width: 55px;
+    height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: white;
+    border-radius: 50%;
+}
+
+/* ==================== STATS CARDS ==================== */
+.stat-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.stat-card-inner {
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.stat-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: white;
+}
+
+.subjects-card .stat-icon {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+}
+
+.students-card .stat-icon {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.monthly-card .stat-icon {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+}
+
+.quick-card .stat-icon {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 5px;
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.stat-label {
+    color: #6c757d;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.stat-trend {
+    font-size: 12px;
+    color: #28a745;
+    background: #d4edda;
+    padding: 3px 10px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.stat-link {
+    color: #11998e;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.stat-link:hover {
+    text-decoration: underline;
+}
+
+/* ==================== SECTION CARDS ==================== */
+.section-card {
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    transition: box-shadow 0.3s;
+}
+
+.section-card:hover {
+    box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+}
+
+.section-header {
+    padding: 20px 25px;
+    background: white;
+    border-bottom: 2px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #11998e20, #38ef7d20);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #11998e;
+}
+
+.header-content {
+    flex: 1;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: #2c3e50;
+}
+
+.section-subtitle {
+    font-size: 13px;
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+.section-body {
+    padding: 20px 25px;
+}
+
+/* ==================== SUBJECTS GRID ==================== */
+.subjects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.subject-card {
+    background: #f8f9fa;
+    border-radius: 16px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.subject-card:hover {
+    background: linear-gradient(135deg, #11998e10, #38ef7d10);
+    transform: translateX(5px);
+}
+
+.subject-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+}
+
+.subject-info {
+    flex: 1;
+}
+
+.subject-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 3px;
+    color: #2c3e50;
+}
+
+.subject-code {
+    font-size: 11px;
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+.subject-arrow {
+    color: #adb5bd;
+    transition: all 0.3s;
+}
+
+.subject-card:hover .subject-arrow {
+    transform: translateX(5px);
+    color: #11998e;
+}
+
+/* ==================== MODERN TABLE ==================== */
+.modern-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+}
+
+.modern-table thead th {
+    background: #f8f9fa;
+    padding: 12px 15px;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.modern-table tbody tr {
+    background: white;
+    transition: all 0.3s;
+}
+
+.modern-table tbody tr:hover {
+    background: #f8f9ff;
+    transform: scale(1.01);
+}
+
+.modern-table tbody td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+}
+
+.student-id {
+    font-weight: 600;
+    color: #11998e;
+    background: #d4edda;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: inline-block;
+}
+
+/* Action Buttons */
+.btn-action {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0 3px;
+}
+
+.btn-edit {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.btn-edit:hover {
+    background: #ffc107;
+    color: white;
+}
+
+.btn-view {
+    background: #d4edda;
+    color: #155724;
+}
+
+.btn-view:hover {
+    background: #28a745;
+    color: white;
+}
+
+/* ==================== ACTION CARDS ==================== */
+.action-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.action-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 16px;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.action-card:hover {
+    background: linear-gradient(135deg, #11998e10, #38ef7d10);
+    transform: translateX(5px);
+}
+
+.action-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: white;
+}
+
+.student-action {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.monthly-action {
+    background: linear-gradient(135deg, #11998e, #38ef7d);
+}
+
+.marks-action {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+}
+
+.upload-action {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+}
+
+.download-action {
+    background: linear-gradient(135deg, #fa709a, #fee140);
+}
+
+.action-info {
+    flex: 1;
+}
+
+.action-info h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 3px;
+    color: #2c3e50;
+}
+
+.action-info p {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+.action-arrow {
+    color: #adb5bd;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.action-card:hover .action-arrow {
+    transform: translateX(5px);
+    color: #11998e;
+}
+
+/* ==================== BUTTONS ==================== */
+.btn-glass-sm {
+    background: #f8f9fa;
+    padding: 6px 15px;
+    border-radius: 20px;
+    text-decoration: none;
+    color: #11998e;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-glass-sm:hover {
+    background: #11998e;
+    color: white;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-card {
+    animation: fadeInUp 0.6s ease forwards;
+    opacity: 0;
+}
+
+.animate-row {
+    animation: fadeInUp 0.4s ease forwards;
+    opacity: 0;
+}
+
+.animate-row:nth-child(1) { animation-delay: 0.05s; }
+.animate-row:nth-child(2) { animation-delay: 0.1s; }
+.animate-row:nth-child(3) { animation-delay: 0.15s; }
+.animate-row:nth-child(4) { animation-delay: 0.2s; }
+.animate-row:nth-child(5) { animation-delay: 0.25s; }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .profile-dropdown {
+        text-align: center;
+        margin-top: 15px;
+    }
+    
+    .stat-card-inner {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .section-header {
+        flex-wrap: wrap;
+    }
+    
+    .subjects-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .modern-table {
+        font-size: 12px;
+    }
+    
+    .modern-table td, .modern-table th {
+        padding: 8px;
+    }
+}
+
+/* Calendar and Toast Styles */
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.attendance-badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    display: inline-block;
+}
+
+.attendance-badge:hover {
+    transform: scale(1.05);
+}
+
+.badge-present {
+    background: #28a745;
+    color: white;
+}
+
+.badge-absent {
+    background: #dc3545;
+    color: white;
+}
+
+.badge-late {
+    background: #ffc107;
+    color: black;
+}
+
+.badge-leave {
+    background: #17a2b8;
+    color: white;
+}
+
+.badge-default {
+    background: #6c757d;
+    color: white;
+}
+</style>
+
+<!-- Add Font Awesome if not already in base.html -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script>
+let dashboardCurrentSubjectId = '';
+let dashboardCurrentYear = {{ current_year }};
+let dashboardCurrentMonth = {{ current_month }};
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showDashboardToast(message, type) {
+    var toast = document.createElement('div');
+    toast.className = `toast-notification alert alert-${type === 'success' ? 'success' : 'danger'} shadow-lg`;
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'times-circle'} me-2 fa-lg"></i>
+            <strong>${message}</strong>
+            <button type="button" class="btn-close ms-3" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+function loadDashboardCalendar() {
+    const subjectId = document.getElementById('dashboardSubjectSelect').value;
+    const monthPicker = document.getElementById('dashboardMonthPicker').value;
+    
+    if (!subjectId) {
+        document.getElementById('dashboardCalendarContainer').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-calendar-alt fa-3x text-muted mb-3 d-block"></i>
+                <p class="text-muted">Select a subject to load calendar</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const [year, month] = monthPicker.split('-');
+    
+    fetch(`/teacher/monthly-attendance/?subject_id=${subjectId}&year=${year}&month=${month}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('dashboardCalendarContainer').innerHTML = data.calendar_html;
+            dashboardCurrentSubjectId = subjectId;
+            dashboardCurrentYear = parseInt(year);
+            dashboardCurrentMonth = parseInt(month);
+        } else {
+            showDashboardToast('Error loading calendar', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showDashboardToast('Failed to load calendar', 'error');
+    });
+}
+
+function updateDashboardAttendance(studentId, date, session, buttonElement) {
+    const subjectId = document.getElementById('dashboardSubjectSelect').value;
+    if (!subjectId) {
+        showDashboardToast('Please select a subject', 'error');
+        return;
+    }
+    
+    const originalText = buttonElement.innerHTML;
+    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    buttonElement.disabled = true;
+    
+    fetch('/teacher/attendance/update-monthly/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            student_id: parseInt(studentId),
+            subject_id: parseInt(subjectId),
+            date: date,
+            session: session
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            buttonElement.innerHTML = data.new_status_display;
+            buttonElement.className = `attendance-badge badge-${data.status_color}`;
+            showDashboardToast('Attendance updated!', 'success');
+        } else {
+            buttonElement.innerHTML = originalText;
+            showDashboardToast('Error: ' + data.error, 'error');
+        }
+        buttonElement.disabled = false;
+    })
+    .catch(error => {
+        buttonElement.innerHTML = originalText;
+        buttonElement.disabled = false;
+        showDashboardToast('Network error', 'error');
+    });
+}
+
+window.updateDashboardAttendance = updateDashboardAttendance;
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('dashboardSubjectSelect')?.addEventListener('change', loadDashboardCalendar);
+    document.getElementById('dashboardPrevMonth')?.addEventListener('click', () => {
+        const picker = document.getElementById('dashboardMonthPicker');
+        const [year, month] = picker.value.split('-');
+        let newYear = parseInt(year);
+        let newMonth = parseInt(month) - 1;
+        if (newMonth < 1) {
+            newMonth = 12;
+            newYear--;
+        }
+        picker.value = `${newYear}-${String(newMonth).padStart(2, '0')}`;
+        loadDashboardCalendar();
+    });
+    document.getElementById('dashboardNextMonth')?.addEventListener('click', () => {
+        const picker = document.getElementById('dashboardMonthPicker');
+        const [year, month] = picker.value.split('-');
+        let newYear = parseInt(year);
+        let newMonth = parseInt(month) + 1;
+        if (newMonth > 12) {
+            newMonth = 1;
+            newYear++;
+        }
+        picker.value = `${newYear}-${String(newMonth).padStart(2, '0')}`;
+        loadDashboardCalendar();
+    });
+    document.getElementById('dashboardMonthPicker')?.addEventListener('change', loadDashboardCalendar);
+});
+</script>
+{% endblock %}

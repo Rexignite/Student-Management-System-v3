@@ -1,0 +1,43 @@
+<!-- templates/teacher/edit_marks.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-white">
+                    <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Marks</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Student</label>
+                            <input type="text" class="form-control" value="{{ marks.student.full_name }}" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Subject</label>
+                            <input type="text" class="form-control" value="{{ marks.subject.subject_name }}" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Exam Type</label>
+                            <input type="text" class="form-control" value="{{ marks.get_exam_type_display }}" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Marks Obtained</label>
+                            <input type="number" name="marks_obtained" class="form-control" value="{{ marks.marks_obtained }}" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Total Marks</label>
+                            <input type="number" name="total_marks" class="form-control" value="{{ marks.total_marks }}" step="0.01" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Marks</button>
+                        <a href="{% url 'teacher_manage_marks' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

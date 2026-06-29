@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0 fw-bold">
+                                <i class="fas fa-calendar-alt me-3"></i>Monthly Attendance Calendar
+                            </h2>
+                            <p class="mb-0 mt-2 opacity-75">Mark student attendance - Full Month View (AM/PM)</p>
+                        </div>
+                        <div>
+                            <i class="fas fa-chalkboard-teacher fa-3x opacity-25"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Section -->
+    <div class="card border-0 shadow-lg mb-4">
+        <div class="card-header bg-white border-0 py-3">
+            <h5 class="mb-0 text-primary">
+                <i class="fas fa-filter me-2"></i>Select Filters
+            </h5>
+        </div>
+        <div class="card-body pt-0">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-book me-1 text-primary"></i>Select Subject
+                    </label>
+                    <select name="subject_id" class="form-select form-control-lg" id="subjectSelect" required>
+                        <option value="">-- Select Subject --</option>
+                        {% for subject in my_subjects %}
+                        <option value="{{ subject.id }}" {% if selected_subject_id|stringformat:"s" == subject.id|stringformat:"s" %}selected{% endif %}>
+                            {{ subject.subject_name }} ({{ subject.subject_code }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-calendar-month me-1 text-primary"></i>Select Month
+                    </label>
+                    <div class="input-group">
+                        <button class="btn btn-outline-secondary" id="prevMonthBtn">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <input type="month" id="monthPicker" class="form-control form-control-lg text-center" 
+                               value="{{ current_year }}-{% if current_month < 10 %}0{% endif %}{{ current_month }}">
+                        <button class="btn btn-outline-secondary" id="nextMonthBtn">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-white">Action</label>
+                    <button class="btn btn-primary btn-lg w-100" id="loadCalendarBtn">
+                        <i class="fas fa-calendar-alt me-2"></i>Load Calendar
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold text-white">Reset</label>
+                    <a href="{% url 'monthly_attendance_calendar' %}" class="btn btn-secondary btn-lg w-100">
+                        <i class="fas fa-sync-alt me-2"></i>Reset
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Calendar Container -->
+    <div id="calendarContainer">
+        {% include 'teacher/monthly_calendar_partial.html' %}
+    </div>
+</div>
+
+<style>
+    .btn-loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+    .toast-notification {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+        animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+</style>
+
+<script>
+    let currentSubjectId = '{{ selected_subject_id }}';
+    let currentYear = {{ current_year }};
+    let currentMonth = {{ current_month }};
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    function showToast(message, type) {
+        var toast = document.createElement('div');
+        toast.className = `toast-notification alert alert-${type === 'success' ? 'success' : 'danger'} shadow-lg`;
+        toast.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'times-circle'} me-2 fa-lg"></i>
+                <strong>${message}</strong>
+                <button type="button" class="btn-close ms-3" onclick="this.parentElement.parentElement.remove()"></button>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+    
+    function loadCalendar() {
+        const subjectId = document.getElementById('subjectSelect').value;
+        const monthPicker = document.getElementById('monthPicker').value;
+        
+        if (!subjectId) {
+            showToast('Please select a subject', 'error');
+            return;
+        }
+        
+        const [year, month] = monthPicker.split('-');
+        
+        fetch(`/teacher/monthly-attendance/?subject_id=${subjectId}&year=${year}&month=${month}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('calendarContainer').innerHTML = data.calendar_html;
+                currentSubjectId = subjectId;
+                currentYear = parseInt(year);
+                currentMonth = parseInt(month);
+            } else {
+                showToast('Error loading calendar', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to load calendar', 'error');
+        });
+    }
+    
+    function updateMonthlyAttendance(studentId, date, session, buttonElement) {
+        if (!currentSubjectId) {
+            showToast('Please select a subject', 'error');
+            return;
+        }
+        
+        const originalText = buttonElement.innerHTML;
+        buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        buttonElement.disabled = true;
+        
+        fetch('/teacher/attendance/update-monthly/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                student_id: parseInt(studentId),
+                subject_id: parseInt(currentSubjectId),
+                date: date,
+                session: session
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                buttonElement.innerHTML = data.new_status_display;
+                buttonElement.className = `attendance-badge badge-${data.status_color}`;
+                showToast('Attendance updated!', 'success');
+            } else {
+                buttonElement.innerHTML = originalText;
+                showToast('Error: ' + data.error, 'error');
+            }
+            buttonElement.disabled = false;
+        })
+        .catch(error => {
+            buttonElement.innerHTML = originalText;
+            buttonElement.disabled = false;
+            showToast('Network error', 'error');
+        });
+    }
+    
+    // Event listeners
+    document.getElementById('loadCalendarBtn')?.addEventListener('click', loadCalendar);
+    document.getElementById('prevMonthBtn')?.addEventListener('click', () => {
+        const picker = document.getElementById('monthPicker');
+        const [year, month] = picker.value.split('-');
+        let newYear = parseInt(year);
+        let newMonth = parseInt(month) - 1;
+        if (newMonth < 1) {
+            newMonth = 12;
+            newYear--;
+        }
+        picker.value = `${newYear}-${String(newMonth).padStart(2, '0')}`;
+        loadCalendar();
+    });
+    document.getElementById('nextMonthBtn')?.addEventListener('click', () => {
+        const picker = document.getElementById('monthPicker');
+        const [year, month] = picker.value.split('-');
+        let newYear = parseInt(year);
+        let newMonth = parseInt(month) + 1;
+        if (newMonth > 12) {
+            newMonth = 1;
+            newYear++;
+        }
+        picker.value = `${newYear}-${String(newMonth).padStart(2, '0')}`;
+        loadCalendar();
+    });
+    document.getElementById('monthPicker')?.addEventListener('change', loadCalendar);
+    document.getElementById('subjectSelect')?.addEventListener('change', () => {
+        if (document.getElementById('subjectSelect').value) {
+            loadCalendar();
+        }
+    });
+</script>
+{% endblock %}

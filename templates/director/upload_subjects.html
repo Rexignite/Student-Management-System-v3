@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>📤 Upload Subjects from CSV</h4>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="alert alert-info">
+                <h5>📋 CSV Format Instructions:</h5>
+                <p>Your CSV file must have the following columns (in any order):</p>
+                <ul>
+                    <li><strong>subject_code</strong> - Code like MATH101, CS201 (required)</li>
+                    <li><strong>subject_name</strong> - Full subject name (required)</li>
+                    <li><strong>teacher_id</strong> - Teacher ID to assign (optional)</li>
+                    <li><strong>description</strong> - Subject description (optional)</li>
+                </ul>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="csv_file" class="form-label">Select CSV File:</label>
+                    <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                </div>
+                <button type="submit" class="btn btn-primary">📤 Upload & Import</button>
+                <a href="{% url 'manage_subjects' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

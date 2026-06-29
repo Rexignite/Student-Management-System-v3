@@ -1,0 +1,75 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>📤 Import {{ model_name }} from CSV</h4>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="alert alert-info">
+                <h5>📋 CSV Format Instructions:</h5>
+                <p>Your CSV file must have the following columns in this exact order:</p>
+                <ul>
+                    {% for field in fields %}
+                    <li><strong>{{ field }}</strong></li>
+                    {% endfor %}
+                </ul>
+                <p><strong>📝 Sample CSV:</strong></p>
+                <pre class="bg-light p-2" style="overflow-x: auto;">{{ sample_csv }}</pre>
+                {% if password_note %}
+                <p class="mb-0 mt-2"><strong>🔑 Note:</strong> {{ password_note }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="alert alert-warning">
+                <strong>⚠️ Important:</strong>
+                <ul class="mb-0">
+                    <li>File must be in <strong>CSV format</strong> (comma-separated values)</li>
+                    <li>First row must be the <strong>column headers</strong></li>
+                    <li>Maximum file size: <strong>2MB</strong></li>
+                    <li>Duplicate entries will be <strong>skipped</strong></li>
+                </ul>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="csv_file" class="form-label">Select CSV File:</label>
+                    <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                    <div class="form-text">Only .csv files are allowed</div>
+                </div>
+                <button type="submit" class="btn btn-primary">📤 Import CSV</button>
+                <a href="../" class="btn btn-secondary">⬅️ Back to List</a>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-header bg-success text-white">
+            <h5>📥 How to Export Data</h5>
+        </div>
+        <div class="card-body">
+            <p>To export data as CSV:</p>
+            <ol>
+                <li>Go to the <strong>{{ model_name }} list page</strong></li>
+                <li>Select the records you want to export (or select none for all)</li>
+                <li>From the <strong>"Actions" dropdown</strong>, select <strong>"Download Selected {{ model_name }} as CSV"</strong></li>
+                <li>Click <strong>"Go"</strong> to download</li>
+            </ol>
+            <div class="alert alert-success">
+                💡 <strong>Pro Tip:</strong> You can delete multiple records at once by selecting them and choosing "Delete selected {{ model_name }}" from the Actions dropdown.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

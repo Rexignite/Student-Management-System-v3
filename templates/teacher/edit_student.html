@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-edit me-2"></i>Edit Student</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">First Name</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ student.user.first_name|default:'' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ student.user.last_name|default:'' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Student ID</label>
+                            <input type="text" name="student_id" class="form-control" value="{{ student.student_id }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" name="full_name" class="form-control" value="{{ student.full_name }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Class Name</label>
+                            <input type="text" name="class_name" class="form-control" value="{{ student.class_name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Roll Number</label>
+                            <input type="text" name="roll_number" class="form-control" value="{{ student.roll_number }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Parent Name</label>
+                            <input type="text" name="parent_name" class="form-control" value="{{ student.parent_name|default:'' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Parent Phone</label>
+                            <input type="tel" name="parent_phone" class="form-control" value="{{ student.parent_phone|default:'' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea name="address" class="form-control" rows="3">{{ student.address|default:'' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-2"></i>Update Student
+                    </button>
+                    <a href="{% url 'teacher_manage_students' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div> 
+{% endblock %}
