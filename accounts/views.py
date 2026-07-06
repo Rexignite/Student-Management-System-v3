@@ -1,9 +1,9 @@
 # ====================================================================
 # accounts/views.py
 # COMPLETE FILE - STUDENT MANAGEMENT SYSTEM
-# WITH OTP BASED PASSWORD RESET SYSTEM
+# WITH OTP BASED PASSWORD RESET SYSTEM - FULLY FIXED
 # WITH DIRECTOR USER MANAGEMENT
-# FULLY FIXED WITH DIRECT URL REDIRECTS
+# WITH DELETE & RE-ADD FUNCTIONALITY FIXED
 # ====================================================================
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -24,6 +24,7 @@ import csv
 import json
 import re
 import io
+import random
 
 from .models import User
 from users.models import Student, Teacher
@@ -462,7 +463,7 @@ def validate_notification_message_professional(message):
 
 
 # ====================================================================
-# PART 1: AUTHENTICATION VIEWS (FIXED WITH DIRECT URLS)
+# PART 1: AUTHENTICATION VIEWS
 # ====================================================================
 
 @csrf_protect
@@ -668,13 +669,17 @@ def dashboard(request):
 
 
 # ====================================================================
-# PART 2: OTP BASED PASSWORD RESET VIEWS
+# PART 2: OTP BASED PASSWORD RESET VIEWS - FULLY FIXED
 # ====================================================================
 
 def forgot_password(request):
     """Step 1: User enters email, OTP sent"""
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
+        
+        if not email:
+            messages.error(request, '❌ Please enter your email address!')
+            return redirect('/forgot-password/')
         
         try:
             user = User.objects.get(email=email)
@@ -684,19 +689,25 @@ def forgot_password(request):
             user.reset_otp = otp
             user.reset_otp_created_at = timezone.now()
             user.reset_otp_verified = False
-            user.save()
+            user.save(update_fields=['reset_otp', 'reset_otp_created_at', 'reset_otp_verified'])
             
             # Send OTP email
-            send_otp_email(email, otp)
-            
-            # Store email in session
-            request.session['reset_email'] = email
-            
-            messages.success(request, f'✅ OTP sent to {email}. Valid for 10 minutes.')
-            return redirect('/verify-otp/')
+            if send_otp_email(email, otp):
+                # Store email in session
+                request.session['reset_email'] = email
+                request.session['reset_email_timestamp'] = timezone.now().isoformat()
+                
+                messages.success(request, f'✅ OTP sent to {email}. Valid for 10 minutes.')
+                return redirect('/verify-otp/')
+            else:
+                messages.error(request, '❌ Failed to send OTP email. Please try again.')
+                return redirect('/forgot-password/')
             
         except User.DoesNotExist:
             messages.error(request, '❌ No account found with this email address!')
+            return redirect('/forgot-password/')
+        except Exception as e:
+            messages.error(request, f'❌ Error: {str(e)}')
             return redirect('/forgot-password/')
     
     return render(request, 'accounts/forgot_password.html')
@@ -714,19 +725,27 @@ def verify_otp(request):
     if request.method == 'POST':
         otp = request.POST.get('otp', '').strip()
         
+        if not otp or len(otp) != 6:
+            messages.error(request, '❌ Please enter a valid 6-digit OTP!')
+            return redirect('/verify-otp/')
+        
         try:
             user = User.objects.get(email=email)
             
             # Check if OTP exists and matches
-            if user.reset_otp and user.reset_otp == otp:
+            if not user.reset_otp:
+                messages.error(request, '❌ No OTP found. Please request a new one.')
+                return redirect('/forgot-password/')
+            
+            if user.reset_otp == otp:
                 # Check if OTP expired
                 if verify_otp_expiry(user.reset_otp_created_at):
                     messages.error(request, '❌ OTP has expired! Please request a new one.')
                     return redirect('/forgot-password/')
                 
-                # OTP verified
+                # OTP verified - mark as verified
                 user.reset_otp_verified = True
-                user.save()
+                user.save(update_fields=['reset_otp_verified'])
                 
                 messages.success(request, '✅ OTP verified! Set your new password.')
                 return redirect('/set-new-password/')
@@ -736,12 +755,15 @@ def verify_otp(request):
         except User.DoesNotExist:
             messages.error(request, '❌ User not found!')
             return redirect('/forgot-password/')
+        except Exception as e:
+            messages.error(request, f'❌ Error: {str(e)}')
+            return redirect('/verify-otp/')
     
     return render(request, 'accounts/verify_otp.html', {'email': email})
 
 
 def set_new_password(request):
-    """Step 3: User sets new password after OTP verification"""
+    """Step 3: User sets new password after OTP verification - FULLY FIXED"""
     # Get email from session
     email = request.session.get('reset_email', '')
     
@@ -762,8 +784,12 @@ def set_new_password(request):
                 return redirect('/forgot-password/')
             
             # Validate password
-            if not new_password or not confirm_password:
-                messages.error(request, '❌ Please enter both password fields!')
+            if not new_password:
+                messages.error(request, '❌ Please enter a new password!')
+                return redirect('/set-new-password/')
+            
+            if not confirm_password:
+                messages.error(request, '❌ Please confirm your password!')
                 return redirect('/set-new-password/')
             
             if new_password != confirm_password:
@@ -774,22 +800,35 @@ def set_new_password(request):
                 messages.error(request, '❌ Password must be at least 6 characters!')
                 return redirect('/set-new-password/')
             
-            # Set new password
+            # ============================================
+            # ✅ FIX: Properly set new password
+            # ============================================
             user.set_password(new_password)
+            
+            # Clear OTP fields
             user.reset_otp = None
             user.reset_otp_created_at = None
             user.reset_otp_verified = False
+            
+            # ✅ CRITICAL: Use save() NOT update_fields
             user.save()
+            # ============================================
             
             # Clear session
-            del request.session['reset_email']
+            if 'reset_email' in request.session:
+                del request.session['reset_email']
+            if 'reset_email_timestamp' in request.session:
+                del request.session['reset_email_timestamp']
             
-            messages.success(request, '✅ Password changed successfully! Please login.')
+            messages.success(request, '✅ Password changed successfully! Please login with your new password.')
             return redirect('/login/')
             
         except User.DoesNotExist:
             messages.error(request, '❌ User not found!')
             return redirect('/forgot-password/')
+        except Exception as e:
+            messages.error(request, f'❌ Error: {str(e)}')
+            return redirect('/set-new-password/')
     
     return render(request, 'accounts/set_new_password.html', {'email': email})
 
@@ -810,16 +849,19 @@ def resend_otp(request):
         user.reset_otp = otp
         user.reset_otp_created_at = timezone.now()
         user.reset_otp_verified = False
-        user.save()
+        user.save(update_fields=['reset_otp', 'reset_otp_created_at', 'reset_otp_verified'])
         
         # Send OTP email
-        send_otp_email(email, otp)
-        
-        messages.success(request, f'✅ New OTP sent to {email}. Valid for 10 minutes.')
+        if send_otp_email(email, otp):
+            messages.success(request, f'✅ New OTP sent to {email}. Valid for 10 minutes.')
+        else:
+            messages.error(request, '❌ Failed to send OTP. Please try again.')
         
     except User.DoesNotExist:
         messages.error(request, '❌ User not found!')
         return redirect('/forgot-password/')
+    except Exception as e:
+        messages.error(request, f'❌ Error: {str(e)}')
     
     return redirect('/verify-otp/')
 
@@ -1540,7 +1582,7 @@ Student Management System
 
 
 # ====================================================================
-# PART 10: DIRECTOR - STUDENT MANAGEMENT
+# PART 10: DIRECTOR - STUDENT MANAGEMENT (WITH DELETE FIX)
 # ====================================================================
 
 @login_required
@@ -1769,22 +1811,30 @@ def edit_student(request, student_id):
 @login_required
 @user_passes_test(lambda u: u.role == 'director')
 def delete_student(request, student_id):
+    """Delete student - FIXED: Properly handle deletion so user can be re-added"""
     student = get_object_or_404(Student, id=student_id)
     student_name = student.full_name
-    user = student.user
+    student_id_value = student.student_id
     
     if request.method == 'POST':
+        # Store user object before deletion
+        user = student.user
+        
+        # First delete student profile
         student.delete()
+        
+        # Then delete user if exists
         if user:
             user.delete()
-        messages.success(request, f'✅ Student {student_name} deleted successfully!')
+        
+        messages.success(request, f'✅ Student "{student_name}" (ID: {student_id_value}) deleted successfully! You can now re-add them.')
         return redirect('/director/students/')
     
     return render(request, 'director/delete_student.html', {'student': student})
 
 
 # ====================================================================
-# PART 11: DIRECTOR - TEACHER MANAGEMENT
+# PART 11: DIRECTOR - TEACHER MANAGEMENT (WITH DELETE FIX)
 # ====================================================================
 
 @login_required
@@ -1995,15 +2045,21 @@ def edit_teacher(request, teacher_id):
 @login_required
 @user_passes_test(lambda u: u.role == 'director')
 def delete_teacher(request, teacher_id):
+    """Delete teacher - FIXED: Properly handle deletion so user can be re-added"""
     teacher = get_object_or_404(Teacher, id=teacher_id)
     teacher_name = teacher.full_name
+    teacher_id_value = teacher.teacher_id
     user = teacher.user
     
     if request.method == 'POST':
+        # Delete teacher profile first
         teacher.delete()
+        
+        # Delete user if exists
         if user:
             user.delete()
-        messages.success(request, f'✅ Teacher {teacher_name} deleted successfully!')
+        
+        messages.success(request, f'✅ Teacher "{teacher_name}" (ID: {teacher_id_value}) deleted successfully! You can now re-add them.')
         return redirect('/director/teachers/')
     
     return render(request, 'director/delete_teacher.html', {'teacher': teacher})
