@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-%poe+3l2jf)69--xt*g9qo2fpt@zr*d%y4)=&b5qu2j6i01%qa
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']  # ✅ Production ke liye specific domain daalna
+ALLOWED_HOSTS = ['*']
 
 # ==================== APPLICATION DEFINITION ====================
 INSTALLED_APPS = [
@@ -33,7 +33,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # ✅ Added for static files in production
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -63,43 +63,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'core.wsgi.application'
 
 # ==================== DATABASE ====================
-# ✅ Render ke liye PostgreSQL use karein (recommended)
-# Ya MySQL chahiye to neeche wala use karein
-
-# Option 1: MySQL (Local/Remote)
+# ✅ SQLite for Render deployment (No extra dependencies needed)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mysqldemo',
-        'USER': 'root',
-        'PASSWORD': 'Ritesh@2020',
-        'HOST': 'localhost',
-        'PORT': '3306',
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-        },
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-# ✅ Option 2: PostgreSQL (Render pe better hai)
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'your_database_name',
-#         'USER': 'your_user',
-#         'PASSWORD': 'your_password',
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-# }
-
-# ✅ Render ke liye DATABASE_URL support
-# import dj_database_url
-# if 'DATABASE_URL' in os.environ:
-#     DATABASES['default'] = dj_database_url.config(
-#         conn_max_age=600,
-#         conn_health_checks=True,
-#     )
 
 # ==================== PASSWORD VALIDATION ====================
 AUTH_PASSWORD_VALIDATORS = [
@@ -131,7 +101,6 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# ✅ Whitenoise storage for production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
@@ -149,24 +118,22 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 # ==================== CSRF & SESSION SETTINGS ====================
-CSRF_COOKIE_SECURE = False  # ✅ Production mein True karein
+CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
 
-SESSION_COOKIE_SECURE = False  # ✅ Production mein True karein
+SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 
-# Trusted origins for CSRF
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://localhost:8000',
-    'https://*.onrender.com',  # ✅ Render domain ke liye
-    'https://your-app-name.onrender.com',  # ✅ Apna app name daalein
+    'https://*.onrender.com',
+    'https://student-management-system-v3.onrender.com',
 ]
 
 # ==================== EMAIL CONFIGURATION ====================
-# ✅ Gmail SMTP Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -175,36 +142,13 @@ EMAIL_HOST_USER = 'rk.project.sms2026@gmail.com'
 EMAIL_HOST_PASSWORD = 'scit kikp fgth zkbi'
 DEFAULT_FROM_EMAIL = 'rk.project.sms2026@gmail.com'
 
-# ✅ Development - Console Email Backend (comment out above for local testing)
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-# ✅ Production - SendGrid (Optional)
-# EMAIL_HOST = 'smtp.sendgrid.net'
-# EMAIL_HOST_USER = 'apikey'
-# EMAIL_HOST_PASSWORD = 'your_sendgrid_api_key'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-
 # ==================== PASSWORD RESET SETTINGS ====================
-PASSWORD_RESET_TIMEOUT = 86400  # 24 hours (in seconds)
-PASSWORD_RESET_TIMEOUT_DAYS = 1  # Alternative
+PASSWORD_RESET_TIMEOUT = 86400
 
 # ==================== OTP SETTINGS ====================
-OTP_EXPIRY_MINUTES = 10  # OTP valid for 10 minutes
+OTP_EXPIRY_MINUTES = 10
 
-# ==================== SECURITY SETTINGS (Production) ====================
-# ✅ Production ke liye uncomment karein
-# SECURE_SSL_REDIRECT = True
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
-# SECURE_BROWSER_XSS_FILTER = True
-# SECURE_CONTENT_TYPE_NOSNIFF = True
-# X_FRAME_OPTIONS = 'DENY'
-# SECURE_HSTS_SECONDS = 31536000
-# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-# SECURE_HSTS_PRELOAD = True
-
-# ==================== LOGGING (Optional) ====================
+# ==================== LOGGING ====================
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
