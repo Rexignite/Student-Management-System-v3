@@ -25,7 +25,11 @@ if not User.objects.filter(username='director').exists():
     )
     print("✅ Director created: director / Director@123")
 else:
-    print("ℹ️ Director already exists")
+    # Password reset karein
+    u = User.objects.get(username='director')
+    u.set_password('Director@123')
+    u.save()
+    print("✅ Password reset to Director@123")
 
 # 2. Create Student
 if not User.objects.filter(username='student1').exists():
