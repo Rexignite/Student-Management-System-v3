@@ -4,6 +4,7 @@ Django==6.0
 django-ckeditor==6.7.3
 django-ckeditor-5==0.2.20
 django-js-asset==3.1.2
+django-pwa==2.0.1
 django-taggit==6.1.0
 djangorestframework==3.17.1
 djangorestframework_simplejwt==5.5.1
@@ -15,5 +16,3 @@ PyJWT==2.13.0
 reportlab==4.5.0
 sqlparse==0.5.4
 tzdata==2025.2
-gunicorn==21.2.0
-whitenoise==6.6.0

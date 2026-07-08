@@ -25,6 +25,9 @@ urlpatterns = [
     
     # All Accounts URLs (login, logout, dashboard, director, teacher, student)
     path('', include('accounts.urls')),
+    
+    # PWA URLs
+    path('', include('pwa.urls')),  # ✅ Added for PWA support
 ]
 
 # Static and Media Files (for development only)
